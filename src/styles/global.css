@@ -50,8 +50,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 .announcement-wrap {
   min-height: 39px;
-  border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--paper-2) 88%, transparent);
+  border-bottom: 1px solid #6d28d9;
+  background: #7c3aed;
 }
 .announcement {
   min-height: 39px;
@@ -63,9 +63,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
   font-size:12px;
   font-family:var(--mono);
   text-decoration:none;
-  color:var(--ink-2);
+  color:#fff;
 }
-.announcement-dot { width:7px; height:7px; border-radius:50%; background:var(--gold); box-shadow:0 0 0 5px color-mix(in srgb,var(--gold) 14%,transparent); }
+.announcement-dot { width:7px; height:7px; border-radius:50%; background:#fff; box-shadow:0 0 0 5px rgba(255,255,255,.22); }
 
 .site-header {
   position:absolute;
