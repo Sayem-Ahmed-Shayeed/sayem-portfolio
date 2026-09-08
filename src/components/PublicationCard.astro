@@ -16,8 +16,8 @@ const venue = d.venue ?? d.publisher;
     </div>
     <h3>{d.title}</h3>
     <p class="authors">{people.map((person, i) => <><span class:list={{'self-author': person.toLowerCase().includes('sayem')}}>{person}</span>{i < people.length - 1 ? ', ' : ''}</>)}</p>
-    <p class="venue">{venue}{d.version ? ` · ${d.version}` : ''}</p>
-    {d.tags?.length > 0 && <div class="tag-row">{d.tags.map((tag) => <span class:list={{ gold: tag.toLowerCase().includes('icml') }}>{tag}</span>)}</div>}
+    <p class="venue">{venue.split(/(Workshop at ICML 2026)/).map(part => part === 'Workshop at ICML 2026' ? <span class="venue-highlight">Workshop at ICML 2026</span> : part)}{d.version ? ` · ${d.version}` : ''}</p>
+    {d.tags?.length > 0 && <div class="tag-row">{d.tags.map((tag) => <span>{tag}</span>)}</div>}
     <div class="link-row">
       {d.links?.map((link) => <a href={link.url} target="_blank" rel="noreferrer">{link.label}<span aria-hidden="true">↗</span></a>)}
     </div>

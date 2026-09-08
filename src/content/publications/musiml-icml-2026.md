@@ -10,7 +10,7 @@ status: "Published"
 featured: true
 image: "/images/research/mental-distress.svg"
 alt: "Dental radiograph diagnosis illustration"
-tags: ["ICML 2026 Highlight", "ICML 2026", "Dental Radiograph Analysis", "Medical Imaging", "Representation Learning", "Calibration", "Healthcare AI"]
+tags: ["Dental Radiograph Analysis", "Medical Imaging", "Representation Learning", "Calibration", "Interpretability", "Healthcare AI"]
 links:
   - label: "OpenReview"
     url: "https://openreview.net/forum?id=36"
