@@ -147,6 +147,11 @@ html[data-theme='light'] .theme-toggle .moon, html[data-theme='dark'] .theme-tog
 .tag-row span { padding:6px 10px; border:1px solid var(--line); border-radius:6px; font-family:var(--sans); font-size:13px; font-weight:500; color:var(--ink-2); background:color-mix(in srgb,var(--paper-2) 62%,transparent); }
 .tag-row span.gold { border-color:color-mix(in srgb,var(--gold) 50%,var(--line)); background:color-mix(in srgb,var(--gold) 14%,transparent); color:color-mix(in srgb,var(--gold) 70%,var(--ink)); }
 .tag-row.large span { padding:6px 10px; font-family:var(--sans); font-size:13px; font-weight:500; }
+.tag-link-row { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:18px; flex-wrap:wrap; }
+.tag-link-row .tag-row { margin-top:0; flex:1; }
+.link-row.capsule { margin-top:0; gap:8px; }
+.link-row.capsule a { padding:6px 10px; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--paper-2) 62%,transparent); font-family:var(--sans); font-size:13px; font-weight:500; color:var(--ink-2); text-decoration:none; border-bottom:1px solid var(--line); transition:border-color .2s ease, background .2s ease; }
+.link-row.capsule a:hover { border-color:var(--gold); background:color-mix(in srgb,var(--gold) 10%,var(--paper-2)); }
 
 .globe-shell { position:relative; min-height:410px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; outline:none; }
 .globe-shell canvas { max-width:100%; height:auto !important; }
