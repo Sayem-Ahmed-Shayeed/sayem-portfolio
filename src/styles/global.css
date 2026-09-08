@@ -50,8 +50,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 .announcement-wrap {
   min-height: 39px;
-  border-bottom: 1px solid #8b5cf6;
-  background: #a78bfa;
+  border-bottom: 1px solid #004225;
+  background: #006A4E;
 }
 .announcement {
   min-height: 39px;
