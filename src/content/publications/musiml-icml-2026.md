@@ -6,7 +6,7 @@ authors:
   - "Md. Jalal Uddin Chowdhury"
   - "Shadman Sakib"
 venue: "ICML 2026 Workshop MusIML Poster — The 6th Muslims in ML (MusIML) Workshop at ICML 2026"
-status: "Accepted"
+status: "Published"
 featured: true
 image: "/images/research/mental-distress.svg"
 alt: "Dental radiograph diagnosis illustration"
