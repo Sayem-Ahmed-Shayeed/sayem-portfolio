@@ -3,6 +3,7 @@ const { item, kind = 'publication' } = Astro.props;
 const d = item.data;
 const people = d.authors ?? d.contributors ?? [];
 const venue = d.venue ?? d.publisher;
+const shortVenue = venue.includes('ICML') ? 'ICML 2026' : venue.includes('QPAIN') ? 'IEEE QPAIN 2026' : venue.split('—')[0].split(' — ')[0].trim();
 ---
 <article class:list={['academic-card','reveal', d.featured && 'featured-card']}>
   <div class="academic-thumb">
@@ -18,7 +19,7 @@ const venue = d.venue ?? d.publisher;
     <p class="authors">{people.map((person, i) => <><span class:list={{'self-author': person.toLowerCase().includes('sayem')}}>{person}</span>{i < people.length - 1 ? ', ' : ''}</>)}</p>
     <p class="venue">{venue.split(/(ICML)/).map(part => part === 'ICML' ? <span class="venue-highlight">ICML</span> : part)}{d.version ? ` · ${d.version}` : ''}</p>
     <div class="tag-link-row">
-      <div class="tag-row"><span>{venue}</span></div>
+      <div class="tag-row"><span>{shortVenue}</span></div>
       <div class="link-row capsule">
         {d.links?.map((link) => <a href={link.url} target="_blank" rel="noreferrer">{link.label}<span aria-hidden="true">↗</span></a>)}
       </div>
