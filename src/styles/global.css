@@ -76,8 +76,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .site-header.header-hidden { opacity:0; transform:translateY(-18px); visibility:hidden; pointer-events:none; }
 .nav-shell {
-  width:min(var(--max), calc(100% - 64px));
-  margin:0 auto;
+  width:100%;
+  padding:0 20px;
+  margin:0;
   min-height:52px;
   display:grid;
   grid-template-columns:auto 1fr auto auto;
