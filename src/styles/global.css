@@ -143,6 +143,7 @@ html[data-theme='light'] .theme-toggle .moon, html[data-theme='dark'] .theme-tog
 .about-copy > p:not(.eyebrow) { max-width:650px; color:var(--ink-2); }
 .tag-row { display:flex; flex-wrap:wrap; gap:7px; margin-top:18px; }
 .tag-row span { padding:5px 9px; border:1px solid var(--line); border-radius:6px; font:500 9px var(--mono); color:var(--ink-2); background:color-mix(in srgb,var(--paper-2) 62%,transparent); }
+.tag-row span.gold { border-color:color-mix(in srgb,var(--gold) 50%,var(--line)); background:color-mix(in srgb,var(--gold) 14%,transparent); color:color-mix(in srgb,var(--gold) 70%,var(--ink)); }
 .tag-row.large span { padding:7px 10px; font-size:10px; }
 
 .globe-shell { position:relative; min-height:410px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; outline:none; }
