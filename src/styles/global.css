@@ -10,7 +10,7 @@
   --green: #2f7a62;
   --shadow: 0 18px 60px rgba(28, 37, 45, .08);
   --serif: 'DM Serif Display', Georgia, serif;
-  --sans: 'DM Sans', system-ui, sans-serif;
+  --sans: 'Canva Sans', 'DM Sans', system-ui, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, monospace;
   --max: 1120px;
 }
