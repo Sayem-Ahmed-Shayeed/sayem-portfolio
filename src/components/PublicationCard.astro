@@ -1,0 +1,25 @@
+---
+const { item, kind = 'publication' } = Astro.props;
+const d = item.data;
+const people = d.authors ?? d.contributors ?? [];
+const venue = d.venue ?? d.publisher;
+---
+<article class:list={['academic-card','reveal', d.featured && 'featured-card']}>
+  <div class="academic-thumb">
+    {d.image ? <img src={d.image} alt={d.alt || `${d.title} visual`} loading="lazy" decoding="async" /> : <div class="thumb-placeholder" aria-hidden="true"></div>}
+  </div>
+  <div class="academic-body">
+    <div class="meta-row">
+      <span class="mono">{d.year}</span>
+      {d.status && <span class="badge gold">{d.status}</span>}
+      <span class="badge">{kind}</span>
+    </div>
+    <h3>{d.title}</h3>
+    <p class="authors">{people.map((person, i) => <><span class:list={{'self-author': person.toLowerCase().includes('sayem')}}>{person}</span>{i < people.length - 1 ? ', ' : ''}</>)}</p>
+    <p class="venue">{venue}{d.version ? ` · ${d.version}` : ''}</p>
+    {d.tags?.length > 0 && <div class="tag-row">{d.tags.map((tag) => <span>{tag}</span>)}</div>}
+    <div class="link-row">
+      {d.links?.map((link) => <a href={link.url} target="_blank" rel="noreferrer">{link.label}<span aria-hidden="true">↗</span></a>)}
+    </div>
+  </div>
+</article>

@@ -1,0 +1,21 @@
+---
+const { project } = Astro.props;
+const d = project.data;
+---
+<article class:list={['project-card','reveal', d.featured && 'featured-card']}>
+  <div class="project-thumb">
+    {d.image ? <img src={d.image} alt={d.alt || `${d.title} preview`} loading="lazy" decoding="async" /> : <div class="thumb-placeholder"></div>}
+  </div>
+  <div class="project-body">
+    <div class="meta-row">
+      <span class="mono">{d.date.getFullYear()}</span>
+      {d.status && <span class="badge gold">{d.status}</span>}
+      {d.team && <span class="badge">{d.team}</span>}
+    </div>
+    <h3>{d.title}</h3>
+    <p>{d.description}</p>
+    {d.role && <p class="role-line"><strong>Role:</strong> {d.role}</p>}
+    <div class="tag-row">{d.technologies.map((tag) => <span>{tag}</span>)}</div>
+    <div class="link-row">{d.links.map((link) => <a href={link.url} target="_blank" rel="noreferrer">{link.label}<span aria-hidden="true">↗</span></a>)}</div>
+  </div>
+</article>

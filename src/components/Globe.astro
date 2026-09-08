@@ -1,0 +1,101 @@
+<div class="globe-shell reveal" id="sylhet-globe" tabindex="0" aria-label="Interactive globe highlighting Sylhet, Bangladesh">
+  <canvas width="480" height="480" aria-hidden="true"></canvas>
+  <div class="globe-copy">
+    <span class="globe-kicker">Based in</span>
+    <strong>Sylhet, Bangladesh</strong>
+  </div>
+  <div class="globe-label" aria-hidden="true"><span></span>Sylhet · 24.89°N, 91.87°E</div>
+</div>
+<script>
+  const shell = document.querySelector('#sylhet-globe');
+  const canvas = shell?.querySelector('canvas');
+  if (shell && canvas) {
+    const ctx = canvas.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cssSize = 360;
+    canvas.width = cssSize * dpr;
+    canvas.height = cssSize * dpr;
+    canvas.style.width = `${cssSize}px`;
+    canvas.style.height = `${cssSize}px`;
+    ctx.scale(dpr, dpr);
+
+    const targetLon = 91.8687;
+    const targetLat = 24.8949;
+    let rotation = -18;
+    let targetRotation = -18;
+    let active = false;
+    let raf;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const theme = () => getComputedStyle(document.documentElement);
+    const project = (lat, lon, centerLon) => {
+      const λ = (lon - centerLon) * Math.PI / 180;
+      const φ = lat * Math.PI / 180;
+      const cosφ = Math.cos(φ);
+      return { x: Math.sin(λ) * cosφ, y: -Math.sin(φ), z: Math.cos(λ) * cosφ };
+    };
+
+    function draw() {
+      const s = theme();
+      const ink = s.getPropertyValue('--ink').trim();
+      const gold = s.getPropertyValue('--gold').trim();
+      const paper2 = s.getPropertyValue('--paper-2').trim();
+      ctx.clearRect(0, 0, cssSize, cssSize);
+      const cx = cssSize / 2, cy = cssSize / 2, r = 136;
+      const grad = ctx.createRadialGradient(cx - 48, cy - 58, 10, cx, cy, r);
+      grad.addColorStop(0, paper2);
+      grad.addColorStop(1, 'transparent');
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = grad; ctx.fill();
+      ctx.strokeStyle = ink; ctx.globalAlpha = .14; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+
+      for (let lat=-60; lat<=60; lat+=30) {
+        ctx.beginPath(); let started=false;
+        for (let lon=-180; lon<=180; lon+=4) {
+          const p = project(lat, lon, rotation); if (p.z < 0) { started=false; continue; }
+          const x=cx+p.x*r, y=cy+p.y*r;
+          if(!started){ctx.moveTo(x,y);started=true;} else ctx.lineTo(x,y);
+        }
+        ctx.globalAlpha=.16; ctx.strokeStyle=ink; ctx.stroke();
+      }
+      for (let lon=-180; lon<180; lon+=30) {
+        ctx.beginPath(); let started=false;
+        for (let lat=-88; lat<=88; lat+=3) {
+          const p=project(lat,lon,rotation); if(p.z<0){started=false;continue;}
+          const x=cx+p.x*r,y=cy+p.y*r;
+          if(!started){ctx.moveTo(x,y);started=true;} else ctx.lineTo(x,y);
+        }
+        ctx.globalAlpha=.14; ctx.strokeStyle=ink; ctx.stroke();
+      }
+
+      const syl = project(targetLat, targetLon, rotation);
+      if (syl.z > 0) {
+        const x = cx + syl.x*r, y = cy + syl.y*r;
+        ctx.globalAlpha = .18; ctx.beginPath(); ctx.arc(x,y,18,0,Math.PI*2); ctx.fillStyle=gold; ctx.fill();
+        ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(x,y,5.5,0,Math.PI*2); ctx.fillStyle=gold; ctx.fill();
+        ctx.beginPath(); ctx.arc(x,y,9,0,Math.PI*2); ctx.strokeStyle=gold; ctx.lineWidth=1.5; ctx.stroke();
+      }
+      ctx.globalAlpha=1;
+    }
+
+    function animate() {
+      if (!reduce) {
+        if (active) targetRotation = targetLon;
+        else targetRotation += .08;
+        let delta = ((targetRotation - rotation + 540) % 360) - 180;
+        rotation += delta * (active ? .055 : .02);
+      }
+      draw();
+      raf = requestAnimationFrame(animate);
+    }
+    const activate = () => { active = true; shell.classList.add('is-active'); };
+    const deactivate = () => { active = false; shell.classList.remove('is-active'); targetRotation = rotation; };
+    shell.addEventListener('mouseenter', activate);
+    shell.addEventListener('mouseleave', deactivate);
+    shell.addEventListener('focus', activate);
+    shell.addEventListener('blur', deactivate);
+    shell.addEventListener('click', () => active ? deactivate() : activate());
+    animate();
+    new MutationObserver(draw).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+  }
+</script>
