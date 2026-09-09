@@ -44,11 +44,11 @@ const announcement = news.find(n => n.data.featured) ?? news[0];
     <section class="hero section-pad" id="about">
       <div class="hero-copy reveal hero-centered">
         <div class="portrait-circle">
-          <img src="/images/profile/sayem.png" alt="Sayem Ahmed Shayeed standing outdoors in a green landscape" width="400" height="400" loading="eager" fetchpriority="high" />
+          <img src={`${import.meta.env.BASE_URL}/images/profile/sayem.png`} alt="Sayem Ahmed Shayeed standing outdoors in a green landscape" width="400" height="400" loading="eager" fetchpriority="high" />
         </div>
         <div class="availability-wrap">
           <p class="availability"><span></span>{site.availability}</p>
-          <img class="hero-rabbit-image" src="/images/hero-rabbit-dots.png" alt="" width="1335" height="1178" aria-hidden="true" />
+          <img class="hero-rabbit-image" src={`${import.meta.env.BASE_URL}/images/hero-rabbit-dots.png`} alt="" width="1335" height="1178" aria-hidden="true" />
         </div>
         <p class="eyebrow">Research · Engineering · Mobile</p>
         <h1>{site.name}</h1>
