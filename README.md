@@ -76,14 +76,8 @@ There is intentionally no CV button right now. When the CV is ready, add it to `
 - Project images: `public/images/projects/`
 - Research figures: `public/images/research/`
 
-## GitHub Pages
-1. Create the repo `Sayem-Ahmed-Shayeed/Sayem-Ahmed-Shayeed.github.io`.
-2. Push this project to the `main` branch.
-3. In GitHub: **Settings → Pages → Source → GitHub Actions**.
-4. The included workflow deploys automatically after each push.
-
 ## Vercel
-Import the same GitHub repository into Vercel. The included `vercel.json` uses Astro's static build output.
+Import this GitHub repository into Vercel. The included `vercel.json` uses Astro's static build output, and pushes to `main` trigger redeployments.
 
 ## Current content gaps
 The LeetCode profile URL and publication code URLs still need to be supplied. BongoFishX currently links to Scholar rather than a direct paper. The existing MusIML OpenReview URL has not been independently verified.
