@@ -1,6 +1,6 @@
 ---
 title: "Digital Delta"
-date: 2026-01-01
+date: 2026-04-19
 featured: true
 status: "Hackathon Prototype"
 role: "Core team member across the full system"

@@ -3,25 +3,30 @@ const { item, kind = 'publication' } = Astro.props;
 const d = item.data;
 const people = d.authors ?? d.contributors ?? [];
 const venue = d.venue ?? d.publisher;
-const shortVenue = venue.includes('ICML') ? 'ICML 2026' : venue.includes('QPAIN') ? 'IEEE QPAIN 2026' : venue.split('—')[0].split(' — ')[0].trim();
+const shortVenue = venue.includes('ICML') ? `MusIML · ICML ${d.year}` : venue.includes('QPAIN') ? `IEEE QPAIN ${d.year}` : venue.split('—')[0].trim();
+const paper = d.links?.find(link => /paper|openreview/i.test(link.label));
+const code = d.links?.find(link => /code|github/i.test(link.label));
 ---
 <article class:list={['academic-card','reveal', d.featured && 'featured-card']}>
   <div class="academic-thumb">
-    {d.image ? <img src={d.image} alt={d.alt || `${d.title} visual`} loading="lazy" decoding="async" /> : <div class="thumb-placeholder" aria-hidden="true"></div>}
+    {d.image ? <a class="research-preview" href={d.image} target="_blank" rel="noreferrer" aria-label={`Open full-size image for ${d.title}`}><img src={d.image} alt={d.alt || `${d.title} visual`} loading="lazy" decoding="async" /><span class="preview-label" aria-hidden="true">View image ↗</span></a> : <div class="thumb-placeholder" aria-hidden="true"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6M9 16h6" /></svg></div>}
   </div>
   <div class="academic-body">
     <div class="meta-row">
       <span class="mono">{d.year}</span>
       {d.status && <span class="badge gold">{d.status}</span>}
-      <span class="badge">{kind}</span>
+      <span class="badge">{kind === 'publication' ? 'Publication' : 'Dataset'}</span>
     </div>
     <h3>{d.title}</h3>
     <p class="authors">{people.map((person, i) => <><span class:list={{'self-author': person.toLowerCase().includes('sayem')}}>{person}</span>{i < people.length - 1 ? ', ' : ''}</>)}</p>
-    <p class="venue">{venue.split(/(ICML)/).map(part => part === 'ICML' ? <span class="venue-highlight">ICML</span> : part)}{d.version ? ` · ${d.version}` : ''}</p>
     <div class="tag-link-row">
       <div class="tag-row"><span>{shortVenue}</span></div>
       <div class="link-row capsule">
-        {d.links?.map((link) => <a href={link.url} target="_blank" rel="noreferrer">{link.label}<span aria-hidden="true">↗</span></a>)}
+        {kind === 'publication' ? <>
+          {code ? <a href={code.url} target="_blank" rel="noreferrer" aria-label={`Code for ${d.title}`}>Code <span aria-hidden="true">↗</span></a> : <span class="unavailable-chip" aria-disabled="true" title="Code link not yet available">Code</span>}
+          {paper ? <a href={paper.url} target="_blank" rel="noreferrer" aria-label={`Paper: ${d.title}`}>Paper <span aria-hidden="true">↗</span></a> : <span class="unavailable-chip" aria-disabled="true" title="Paper link not yet available">Paper</span>}
+          {d.links?.filter(link => link !== paper && link !== code).map(link => <a href={link.url} target="_blank" rel="noreferrer">{link.label}<span aria-hidden="true">↗</span></a>)}
+        </> : d.links?.map((link) => <a href={link.url} target="_blank" rel="noreferrer">{link.label}<span aria-hidden="true">↗</span></a>)}
       </div>
     </div>
   </div>

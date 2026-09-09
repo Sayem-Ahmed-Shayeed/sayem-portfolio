@@ -15,6 +15,10 @@ export const site = {
     { label: 'Google Scholar', url: 'https://scholar.google.com/citations?user=D57iaqwAAAAJ&hl=en' }
   ],
   languages: ['Bangla', 'English', 'Hindi'],
+  codingProfiles: [
+    { label: 'Codeforces', url: 'https://codeforces.com/profile/op_vimdhayak' },
+    { label: 'LeetCode', url: 'https://leetcode.com/u/euphori_A/' }
+  ],
   researchInterests: [
     'Machine Learning', 'Deep Learning', 'Computer Vision', 'Healthcare AI',
     'Explainable AI', 'Multimodal AI', 'NLP', 'Agriculture AI'
@@ -32,7 +36,7 @@ export const site = {
 
 export const experience = [
   {
-    date: '2026',
+    date: 'Apr 19, 2026',
     title: 'HackFusion 2026 — Innovation Inter-University National Hackathon',
     org: 'IEEE Computer Society LU SB Chapter · Leading University',
     text: 'Built Digital Delta in a three-person team: an offline-first disaster-response and logistics prototype with mesh communication, route-risk intelligence, secure proof-of-delivery and resilient local data workflows.',
@@ -56,12 +60,15 @@ export const education = [
     org: 'Leading University, Sylhet',
     text: 'Currently in 4.2 under a trimester system. CGPA: 3.92 / 4.00.',
     badge: 'CGPA 3.92'
-  }
+  },
+  { date: 'HSC', title: 'Higher Secondary Certificate (HSC)', org: 'MC College, Sylhet', text: '', badge: 'GPA 5.00' },
+  { date: 'SSC', title: 'Secondary School Certificate (SSC)', org: 'Pagla Govt. Model High School, Sunamganj', text: '', badge: 'GPA 5.00' },
+  { date: 'JSC', title: 'Junior School Certificate (JSC)', org: 'Pagla Govt. Model High School, Sunamganj', text: '', badge: 'GPA 5.00' }
 ];
 
 export const achievements = [
   {
-    year: '2026',
+    year: 'Apr 19, 2026',
     title: 'HackFusion 2026 Participant',
     detail: 'Innovation Inter-University National Hackathon organized by IEEE Computer Society LU SB Chapter.',
     image: '/images/achievements/hackfusion-2026.png'
@@ -75,7 +82,7 @@ export const achievements = [
   {
     year: '2023',
     title: 'Coder of the Batch',
-    detail: 'Batch-level coding recognition. Crest image can be added later.'
+    detail: 'Batch-level recognition for programming achievement.'
   },
   {
     year: 'Ongoing',

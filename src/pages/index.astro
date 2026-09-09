@@ -16,32 +16,35 @@ const announcement = news.find(n => n.data.featured) ?? news[0];
 ---
 <BaseLayout>
   <div class="announcement-wrap">
+    <span class="announcement-spark-group announcement-spark-left" aria-hidden="true"><span>✦</span><span>✦</span><span>✦</span></span>
     <a class="announcement" href={announcement?.data.link || '#news'} target={announcement?.data.link ? '_blank' : undefined} rel={announcement?.data.link ? 'noreferrer' : undefined}>
       <span class="announcement-dot"></span>
       <span>{announcement?.data.title}</span>
       <span aria-hidden="true">↗</span>
     </a>
+    <span class="announcement-spark-group announcement-spark-right" aria-hidden="true"><span>✦</span><span>✦</span><span>✦</span></span>
   </div>
 
   <header class="site-header" id="top">
     <div class="nav-shell">
-      <a href="#top" class="brand" aria-label="Back to top"><span>{site.initials}</span><strong>{site.name}</strong></a>
+      <a href="#top" class="brand" aria-label="Back to top"><span><img src="https://github.githubassets.com/images/mona-loading-default.gif" alt="" width="34" height="34" /></span><strong>{site.name}</strong></a>
       <nav class="desktop-nav" aria-label="Main navigation">
         {site.nav.map(([label, href]) => <a href={href}>{label}</a>)}
       </nav>
       <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">
-        <span class="icon sun" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></span>
-        <span class="icon moon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
       </button>
-      <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span></button>
+      <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation" aria-controls="mobile-nav" aria-expanded="false"><span></span><span></span></button>
     </div>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
       {site.nav.map(([label, href]) => <a href={href}>{label}</a>)}
     </nav>
   </header>
 
-  <main>
+  <main id="main">
     <section class="hero section-pad" id="about">
+      <div class="hero-fauna" aria-hidden="true">
+        <img class="hero-rabbit-image" src="/images/hero-rabbit-dots.png" alt="" width="1335" height="1178" />
+      </div>
       <div class="hero-copy reveal hero-centered">
         <div class="portrait-circle">
           <img src="/images/profile/sayem.png" alt="Sayem Ahmed Shayeed standing outdoors in a green landscape" width="400" height="400" loading="eager" fetchpriority="high" />
@@ -60,6 +63,9 @@ const announcement = news.find(n => n.data.featured) ?? news[0];
               {link.label}
             </a>
           ))}
+        </div>
+        <div class="coding-profiles">
+          {site.codingProfiles.map(link => <a class="button" href={link.url} target="_blank" rel="noreferrer">{link.label} <span aria-hidden="true">↗</span></a>)}
         </div>
         <div class="quick-facts">
           <div><span class="mono">01</span><strong>{site.university}</strong><small>CSE · {site.graduation}</small></div>
@@ -84,26 +90,26 @@ const announcement = news.find(n => n.data.featured) ?? news[0];
       <div class="research-summary reveal">
         <div><span class="metric">{publications.length}</span><p>public research entries</p></div>
         <div><span class="metric">{datasets.length}</span><p>released research dataset</p></div>
-        <div><span class="metric">8</span><p>core research interests</p></div>
+        <div><span class="metric">{site.researchInterests.length}</span><p>research interests</p></div>
       </div>
     </section>
 
     <section class="section-pad section-border" id="publications">
-      <SectionHeader eyebrow="02 / Publications" title="Papers & accepted work" description="Cards follow an academic-first hierarchy: title, authors, venue, year, links and concise research tags." />
+      <SectionHeader eyebrow="02 / Publications" title="Papers & accepted work" />
       <div class="academic-list">
         {publications.map(item => <PublicationCard item={item} />)}
       </div>
     </section>
 
     <section class="section-pad section-border" id="datasets">
-      <SectionHeader eyebrow="03 / Research Datasets" title="Released datasets" description="Datasets are kept separate from papers so each can carry its own DOI, version and repository metadata." />
+      <SectionHeader eyebrow="03 / Research Datasets" title="Released datasets" />
       <div class="academic-list">
         {datasets.map(item => <PublicationCard item={item} kind="dataset" />)}
       </div>
     </section>
 
     <section class="section-pad section-border" id="projects">
-      <SectionHeader eyebrow="04 / Projects" title="Selected systems" description="Research-informed software, mobile products and experiments. Add another Markdown file and the next project appears automatically." />
+      <SectionHeader eyebrow="04 / Projects" title="Projects" />
       <div class="project-list">
         {projects.map(project => <ProjectCard project={project} />)}
       </div>
@@ -177,17 +183,27 @@ const announcement = news.find(n => n.data.featured) ?? news[0];
 
   <footer class="footer">
     <div><strong>{site.name}</strong><span>© {new Date().getFullYear()}</span></div>
-    <p>Built with Astro. Content lives in Markdown so the portfolio can grow without rewriting the layout.</p>
+    <p>Research & software · Sylhet, Bangladesh</p>
   </footer>
 
   <a class="back-top" id="back-top" href="#top" aria-label="Back to top">↑</a>
 
   <script>
     const themeToggle = document.querySelector('#theme-toggle');
-    themeToggle?.addEventListener('click', () => {
+    const changeTheme = () => {
       const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
       document.documentElement.dataset.theme = next;
-      localStorage.setItem('theme', next);
+      try { localStorage.setItem('theme', next); } catch {}
+      themeToggle?.setAttribute('aria-pressed', String(next === 'dark'));
+    };
+    themeToggle?.addEventListener('click', () => {
+      const viewTransition = (document as Document & { startViewTransition?: (callback: () => void) => unknown }).startViewTransition;
+      if (viewTransition) viewTransition.call(document, changeTheme);
+      else {
+        document.documentElement.classList.add('theme-transition');
+        changeTheme();
+        setTimeout(() => document.documentElement.classList.remove('theme-transition'), 480);
+      }
     });
 
     const menuToggle = document.querySelector('#menu-toggle');
@@ -195,16 +211,24 @@ const announcement = news.find(n => n.data.featured) ?? news[0];
     menuToggle?.addEventListener('click', () => {
       const open = menuToggle.getAttribute('aria-expanded') === 'true';
       menuToggle.setAttribute('aria-expanded', String(!open));
+      menuToggle.setAttribute('aria-label', open ? 'Open navigation' : 'Close navigation');
       mobileNav?.classList.toggle('open', !open);
     });
     mobileNav?.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
-      menuToggle?.setAttribute('aria-expanded','false'); mobileNav?.classList.remove('open');
+      menuToggle?.setAttribute('aria-expanded','false'); menuToggle?.setAttribute('aria-label', 'Open navigation'); mobileNav?.classList.remove('open');
     }));
 
-    const header = document.querySelector('.site-header');
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && mobileNav?.classList.contains('open')) {
+        mobileNav.classList.remove('open');
+        menuToggle?.setAttribute('aria-expanded', 'false');
+        menuToggle?.setAttribute('aria-label', 'Open navigation');
+        (menuToggle as HTMLButtonElement)?.focus();
+      }
+    });
+    themeToggle?.setAttribute('aria-pressed', String(document.documentElement.dataset.theme === 'dark'));
     const backTop = document.querySelector('#back-top');
     const onScroll = () => {
-      header?.classList.toggle('header-hidden', scrollY > 180);
       backTop?.classList.toggle('show', scrollY > innerHeight * .75);
     };
     addEventListener('scroll', onScroll, { passive: true }); onScroll();
@@ -215,7 +239,7 @@ const announcement = news.find(n => n.data.featured) ?? news[0];
       const io = new IntersectionObserver(entries => entries.forEach(e => {
         if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); }
       }), { threshold: .12, rootMargin: '0px 0px -40px' });
-      document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+      document.querySelectorAll('.reveal').forEach(el => { el.classList.add('reveal-ready'); io.observe(el); });
     }
   </script>
 </BaseLayout>

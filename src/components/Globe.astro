@@ -1,4 +1,4 @@
-<div class="globe-shell reveal" id="sylhet-globe" tabindex="0" aria-label="Interactive globe highlighting Sylhet, Bangladesh">
+<div class="globe-shell reveal" id="sylhet-globe" tabindex="0" role="button" aria-pressed="false" aria-label="Center globe on Sylhet, Bangladesh">
   <canvas width="480" height="480" aria-hidden="true"></canvas>
   <div class="globe-copy">
     <span class="globe-kicker">Based in</span>
@@ -17,18 +17,44 @@
     canvas.height = cssSize * dpr;
     canvas.style.width = `${cssSize}px`;
     canvas.style.height = `${cssSize}px`;
+    if (!ctx) throw new Error('Canvas rendering unavailable');
     ctx.scale(dpr, dpr);
 
     const targetLon = 91.8687;
     const targetLat = 24.8949;
-    let rotation = -18;
-    let targetRotation = -18;
+    let rotation = 75;
+    let targetRotation = 75;
     let active = false;
-    let raf;
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let raf = 0;
+    let visible = false;
+    let lastTime = 0;
+    const motion = matchMedia('(prefers-reduced-motion: reduce)');
+    // Coarse geographic silhouettes, sampled once into a lightweight dot map.
+    const continents = [
+      [[-17,35],[10,37],[34,30],[51,12],[42,-12],[30,-35],[18,-35],[10,-5],[-10,5]],
+      [[-10,36],[-10,58],[15,71],[40,65],[70,75],[120,72],[170,60],[145,43],[130,32],[120,5],[105,-5],[95,20],[78,8],[65,25],[42,12],[35,35]],
+      [[112,-11],[135,-12],[154,-25],[145,-39],[116,-34]],
+      [[-168,68],[-135,72],[-105,73],[-55,52],[-65,43],[-82,25],[-98,16],[-115,30],[-130,52]],
+      [[-80,10],[-60,10],[-35,-6],[-45,-25],[-68,-55],[-76,-30]],
+      [[-55,60],[-25,70],[-35,83],[-60,80]],
+      [[47,-13],[51,-16],[48,-25],[44,-22]],
+      [[130,32],[142,45],[146,43],[138,33]]
+    ];
+    const inside = (x: number, y: number, polygon: number[][]) => {
+      let result = false;
+      for (let i=0,j=polygon.length-1;i<polygon.length;j=i++) {
+        const [xi,yi]=polygon[i], [xj,yj]=polygon[j];
+        if ((yi>y)!==(yj>y) && x<(xj-xi)*(y-yi)/(yj-yi)+xi) result=!result;
+      }
+      return result;
+    };
+    const land: number[][] = [];
+    for(let lat=-55;lat<=80;lat+=3) for(let lon=-180;lon<180;lon+=3) {
+      if(continents.some(polygon=>inside(lon,lat,polygon))) land.push([lat,lon]);
+    }
 
     const theme = () => getComputedStyle(document.documentElement);
-    const project = (lat, lon, centerLon) => {
+    const project = (lat: number, lon: number, centerLon: number) => {
       const λ = (lon - centerLon) * Math.PI / 180;
       const φ = lat * Math.PI / 180;
       const cosφ = Math.cos(φ);
@@ -68,6 +94,12 @@
         ctx.globalAlpha=.14; ctx.strokeStyle=ink; ctx.stroke();
       }
 
+      for(const [lat,lon] of land) {
+        const p=project(lat,lon,rotation);
+        if(p.z<=0) continue;
+        ctx.globalAlpha=.22+p.z*.43; ctx.fillStyle=ink;
+        ctx.beginPath(); ctx.arc(cx+p.x*r,cy+p.y*r,1.25,0,Math.PI*2); ctx.fill();
+      }
       const syl = project(targetLat, targetLon, rotation);
       if (syl.z > 0) {
         const x = cx + syl.x*r, y = cy + syl.y*r;
@@ -78,24 +110,36 @@
       ctx.globalAlpha=1;
     }
 
-    function animate() {
-      if (!reduce) {
+    function animate(time = 0) {
+      const elapsed = lastTime ? Math.min(time-lastTime,50) : 16;
+      lastTime = time;
+      if (!motion.matches) {
         if (active) targetRotation = targetLon;
-        else targetRotation += .08;
+        else targetRotation += elapsed * .002;
         let delta = ((targetRotation - rotation + 540) % 360) - 180;
         rotation += delta * (active ? .055 : .02);
       }
       draw();
-      raf = requestAnimationFrame(animate);
+      raf = visible && !document.hidden && !motion.matches ? requestAnimationFrame(animate) : 0;
     }
-    const activate = () => { active = true; shell.classList.add('is-active'); };
-    const deactivate = () => { active = false; shell.classList.remove('is-active'); targetRotation = rotation; };
+    const activate = () => { active = true; shell.classList.add('is-active'); shell.setAttribute('aria-pressed','true'); if(motion.matches) { rotation=targetLon; draw(); } };
+    const deactivate = () => { active = false; shell.classList.remove('is-active'); shell.setAttribute('aria-pressed','false'); targetRotation = rotation; };
     shell.addEventListener('mouseenter', activate);
     shell.addEventListener('mouseleave', deactivate);
     shell.addEventListener('focus', activate);
     shell.addEventListener('blur', deactivate);
     shell.addEventListener('click', () => active ? deactivate() : activate());
-    animate();
+    shell.addEventListener('keydown', event => {
+      if(event.key==='Enter' || event.key===' ') { event.preventDefault(); active ? deactivate() : activate(); }
+    });
+    const sync = () => {
+      cancelAnimationFrame(raf); raf=0; lastTime=0;
+      if(visible && !document.hidden) animate();
+    };
+    new IntersectionObserver(entries => { visible=entries[0].isIntersecting; sync(); }).observe(shell);
+    document.addEventListener('visibilitychange',sync);
+    motion.addEventListener('change',sync);
+    draw();
     new MutationObserver(draw).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
   }
 </script>

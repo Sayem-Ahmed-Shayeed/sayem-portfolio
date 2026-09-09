@@ -8,13 +8,13 @@ authors:
 venue: "ICML 2026 Workshop MusIML Poster — The 6th Muslims in ML (MusIML) Workshop at ICML 2026"
 status: "Published"
 featured: true
-image: "/images/research/mental-distress.svg"
-alt: "Dental radiograph diagnosis illustration"
+image: "/images/research/icml.png"
+alt: "MusIML at ICML 2026 acceptance visual"
 tags: ["Dental Radiograph Analysis", "Medical Imaging", "Representation Learning", "Calibration", "Interpretability", "Healthcare AI"]
 links:
   - label: "OpenReview"
-    url: "https://openreview.net/forum?id=36"
-  - label: "Scholar Entry"
+    url: "https://openreview.net/forum?id=Ax5nIzhpt5"
+  - label: "Google Scholar"
     url: "https://scholar.google.com/citations?view_op=view_citation&hl=en&user=D57iaqwAAAAJ&citation_for_view=D57iaqwAAAAJ:u-x6o8ySG0sC"
 ---
 
