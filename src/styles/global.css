@@ -129,7 +129,7 @@ html[data-theme='light'] .theme-toggle .sun, html[data-theme='dark'] .theme-togg
 .section-border { border-top:1px solid var(--line); margin-top:44px; padding-top:44px; }
 .hero { position:relative; isolation:isolate; padding-bottom:52px; }
 .availability-wrap { position:relative; display:inline-flex; margin-bottom:22px; }
-.hero-rabbit-image { position:absolute; right:4px; bottom:calc(100% - 12px); width:78px; height:auto; display:block; pointer-events:none; }
+.hero-rabbit-image { position:absolute; z-index:2; right:4px; bottom:calc(100% - 12px); width:78px; height:auto; display:block; pointer-events:none; }
 .hero-centered, .about-grid { position:relative; z-index:1; }
 .hero-centered { max-width:860px; margin:0 auto; display:flex; flex-direction:column; align-items:center; text-align:center; }
 .hero-centered .hero-bio, .hero-centered .hero-title { max-width:760px; margin-left:auto; margin-right:auto; }
@@ -266,7 +266,25 @@ html[data-theme='light'] .theme-toggle .sun, html[data-theme='dark'] .theme-togg
 .toolbox { margin-top:16px; padding:22px 0; display:grid; grid-template-columns:110px 1fr; gap:28px; border-bottom:1px solid var(--line); }
 .toolbox .mono { font-family:var(--mono); font-size:11px; font-weight:500; }
 .toolbox > div { display:flex; flex-wrap:wrap; gap:8px; }
-.toolbox > div span { font-family:var(--sans); font-size:13px; font-weight:500; color:var(--ink-2); }
+.toolbox > div span { display:inline-flex; align-items:center; gap:7px; font-family:var(--sans); font-size:13px; font-weight:500; color:var(--ink-2); }
+.toolbox > div span img { width:15px; height:15px; flex:0 0 15px; object-fit:contain; }
+.toolbox > div span i { display:none; }
+.toolbox > div span i::before { content:'⌘'; }
+.toolbox > div span[data-skill='Python'] i::before { content:'⌁'; }
+.toolbox > div span[data-skill='C'] i::before { content:'C'; }
+.toolbox > div span[data-skill='C++'] i::before { content:'++'; font-size:8px; }
+.toolbox > div span[data-skill='Java'] i::before { content:'☕'; font-size:11px; }
+.toolbox > div span[data-skill='Dart'] i::before { content:'◇'; }
+.toolbox > div span[data-skill='Flutter'] i::before { content:'▦'; }
+.toolbox > div span[data-skill='OOP'] i::before { content:'◈'; }
+.toolbox > div span[data-skill='Data Structures'] i::before { content:'⌘'; }
+.toolbox > div span[data-skill='Algorithms'] i::before { content:'↗'; }
+.toolbox > div span[data-skill='DBMS'] i::before { content:'▤'; }
+.toolbox > div span[data-skill='Supabase'] i::before { content:'✦'; }
+.toolbox > div span[data-skill='Firebase'] i::before { content:'⚡'; font-size:10px; }
+.toolbox > div span[data-skill='MySQL'] i::before { content:'◉'; }
+.toolbox > div span[data-skill='Android Studio'] i::before { content:'▣'; }
+.toolbox > div span[data-skill='VS Code'] i::before { content:'<> '; font-size:8px; }
 
 .footer { width:min(var(--max), calc(100% - 64px)); margin:0 auto; padding:34px 0 50px; display:flex; align-items:flex-start; justify-content:space-between; gap:30px; color:var(--muted); font-family:var(--sans); font-size:13px; }
 .footer > div { display:flex; gap:12px; }

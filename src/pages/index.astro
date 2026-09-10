@@ -13,6 +13,9 @@ const publications = (await getCollection('publications')).sort((a,b) => b.data.
 const datasets = (await getCollection('datasets')).sort((a,b) => b.data.year - a.data.year);
 const news = (await getCollection('news')).sort((a,b) => b.data.date.valueOf() - a.data.date.valueOf());
 const announcement = news.find(n => n.data.featured) ?? news[0];
+const skillIcons: Record<string, string> = {
+  Python: 'https://cdn.simpleicons.org/python/3776AB', C: 'https://cdn.simpleicons.org/c/394057', 'C++': 'https://cdn.simpleicons.org/cplusplus/00599C', Java: 'https://cdn.simpleicons.org/openjdk/EA2D2E', Dart: 'https://cdn.simpleicons.org/dart/0175C2', Flutter: 'https://cdn.simpleicons.org/flutter/02569B', OOP: 'https://cdn.simpleicons.org/abstract/6B7280', 'Data Structures': 'https://cdn.simpleicons.org/algolia/003DFF', Algorithms: 'https://cdn.simpleicons.org/thealgorithms/00A98F', DBMS: 'https://cdn.simpleicons.org/databricks/FF3621', Supabase: 'https://cdn.simpleicons.org/supabase/3ECF8E', Firebase: 'https://cdn.simpleicons.org/firebase/FFCA28', MySQL: 'https://cdn.simpleicons.org/mysql/4479A1', 'Android Studio': 'https://cdn.simpleicons.org/androidstudio/3DDC84', 'VS Code': 'https://cdn.simpleicons.org/visualstudiocode/007ACC'
+};
 ---
 <BaseLayout>
   <div class="announcement-wrap">
@@ -48,7 +51,7 @@ const announcement = news.find(n => n.data.featured) ?? news[0];
         </div>
         <div class="availability-wrap">
           <p class="availability"><span></span>{site.availability}</p>
-          <img class="hero-rabbit-image" src="/images/hero-rabbit-dots.png" alt="" width="1335" height="1178" aria-hidden="true" />
+          <img class="hero-rabbit-image" src="/images/hero-rabbit-realistic.png" alt="" width="1360" height="1156" aria-hidden="true" />
         </div>
         <p class="eyebrow">Research · Engineering · Mobile</p>
         <h1>{site.name}</h1>
@@ -176,14 +179,14 @@ const announcement = news.find(n => n.data.featured) ?? news[0];
       </div>
       <div class="toolbox reveal">
         <span class="mono">TOOLBOX</span>
-        <div>{site.skills.map(skill => <span>{skill}</span>)}</div>
+        <div>{site.skills.map(skill => <span data-skill={skill}><img src={skillIcons[skill]} alt="" aria-hidden="true" loading="lazy" />{skill}</span>)}</div>
       </div>
     </section>
   </main>
 
   <footer class="footer">
     <div><strong>{site.name}</strong><span>© {new Date().getFullYear()}</span></div>
-    <p>Research & software · Sylhet, Bangladesh</p>
+    <p>Sylhet, Bangladesh</p>
   </footer>
 
   <a class="back-top" id="back-top" href="#top" aria-label="Back to top">↑</a>
