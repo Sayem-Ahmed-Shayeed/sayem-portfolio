@@ -202,9 +202,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .contact-card .button.primary { background:var(--paper-2); color:var(--ink); border-color:var(--paper-2); }
 .contact-card .button.ghost { border-color:color-mix(in srgb,var(--paper-2) 28%,transparent); }
 .contact-actions { display:flex; flex-direction:column; align-items:stretch; justify-content:center; gap:9px; }
-.toolbox { margin-top:16px; padding:22px 0; display:grid; grid-template-columns:110px 1fr; gap:28px; border-bottom:1px solid var(--line); }
+.toolbox { margin-top:16px; padding:26px 0; display:grid; justify-items:center; gap:14px; text-align:center; border-bottom:1px solid var(--line); }
 .toolbox .mono { font-family:var(--label); font-size:12px; font-weight:500; }
-.toolbox > div { display:flex; flex-wrap:wrap; gap:8px; }
+.toolbox > div { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; max-width:720px; }
 .toolbox > div span { display:inline-flex; align-items:center; gap:7px; font-family:var(--sans); font-size:13px; font-weight:500; color:var(--ink-2); }
 .toolbox > div span img { width:15px; height:15px; flex:0 0 15px; object-fit:contain; }
 .toolbox > div span i { display:none; }
@@ -225,10 +225,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .toolbox > div span[data-skill='Android Studio'] i::before { content:'▣'; }
 .toolbox > div span[data-skill='VS Code'] i::before { content:'<> '; font-size:8px; }
 
-.footer { width:min(var(--max), calc(100% - 64px)); margin:0 auto; padding:34px 0 50px; display:flex; align-items:flex-start; justify-content:space-between; gap:30px; color:var(--muted); font-family:var(--sans); font-size:13px; }
-.footer > div { display:flex; gap:12px; }
+.footer { width:min(var(--max), calc(100% - 64px)); margin:0 auto; padding:34px 0 50px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; color:var(--muted); font-family:var(--sans); font-size:13px; }
+.footer > div { display:flex; flex-wrap:wrap; justify-content:center; gap:4px 12px; }
 .footer strong { color:var(--ink); font-family:var(--serif); }
-.footer p { margin:0; max-width:520px; text-align:right; font-size:12px; }
+.footer p { margin:0; max-width:520px; font-size:12px; }
 .back-top { position:fixed; right:22px; bottom:22px; width:46px; height:46px; display:grid; place-items:center; z-index:15; opacity:0; visibility:hidden; transform:translateY(8px); border:1px solid color-mix(in srgb,var(--ink) 18%,transparent); border-radius:10px; background:color-mix(in srgb,var(--paper-2) 68%,transparent); backdrop-filter:blur(14px) saturate(130%); box-shadow:0 10px 30px rgba(0,0,0,.08); text-decoration:none; transition:.25s ease; }
 .back-top.show { opacity:1; visibility:visible; transform:translateY(0); }
 .back-top:hover { transform:translateY(-3px); border-color:var(--gold); }
@@ -253,7 +253,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .hero-grid { min-height:auto; grid-template-columns:1fr; gap:28px; }
   .section-header { grid-template-columns:1fr; gap:16px; }
   .contact-card { grid-template-columns:1fr; padding:36px; gap:30px; }
-  .toolbox { grid-template-columns:1fr; gap:10px; }
 }
 
 @media (max-width: 560px) {
@@ -276,8 +275,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .news-item time { grid-column:1 / -1; }
   .news-list { padding:0 20px; }
   .contact-card { padding:26px 22px; }
-  .footer { flex-direction:column; }
-  .footer p { text-align:left; }
   .mobile-nav { grid-template-columns:1fr 1fr; }
   .back-top { right:14px; bottom:14px; }
 }
