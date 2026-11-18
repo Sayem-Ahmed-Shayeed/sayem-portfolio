@@ -8,7 +8,7 @@ team: "Solo"
 image: "../../assets/projects/uninest.svg"
 alt: "Illustration of the UniNest academic companion dashboard"
 description: "An academic companion app for students with class-session tracking, weekly routines, results, study resources, notes sharing, assignment cover generation, bus schedules and CR information."
-technologies: ["Flutter", "Dart", "Mobile App Development"]
+technologies: ["Flutter", "Dart"]
 links:
   - label: "GitHub"
     url: "https://github.com/Sayem-Ahmed-Shayeed/UniNest"

@@ -11,6 +11,7 @@ import ResearchMap from '../components/research/ResearchMap.astro';
 import { buildWorks } from '../data/research';
 import CardsPlates from '../components/cards/CardsPlates.astro';
 import CardsRows from '../components/cards/CardsRows.astro';
+import AchieveCards from '../components/achievements/AchieveCards.astro';
 import { paperEntry, datasetEntry, projectEntry } from '../data/cards';
 import { site, experience, education, achievements } from '../data/site';
 
@@ -117,19 +118,7 @@ const skillIcons: Record<string, string> = {
 
     <section class="section-pad section-border" id="achievements">
       <SectionHeader eyebrow="07 / Achievements" title="Recognition & milestones" />
-      <div class="achievement-grid">
-        {achievements.map((a, i) => (
-          <article class="achievement-card reveal" style={`--delay:${i*50}ms`}>
-            {a.image && <a class="achievement-image" href={a.image.src} target="_blank" rel="noreferrer"><Image src={a.image} alt={`${a.title} certificate`} width={288} loading="lazy" /></a>}
-            <div class="achievement-content">
-              <span class="mono">{a.year}</span>
-              <h3>{a.title}</h3>
-              <p>{a.detail}</p>
-              {a.link && <a class="text-link" href={a.link} target="_blank" rel="noreferrer">Verify ↗</a>}
-            </div>
-          </article>
-        ))}
-      </div>
+      <AchieveCards items={achievements} />
     </section>
 
     <section class="section-pad section-border" id="news">
