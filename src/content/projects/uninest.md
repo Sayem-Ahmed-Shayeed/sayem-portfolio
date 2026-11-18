@@ -5,7 +5,7 @@ featured: true
 status: "v1.0.1"
 role: "Creator / Flutter Developer"
 team: "Solo"
-image: "/images/projects/uninest.svg"
+image: "../../assets/projects/uninest.svg"
 alt: "Illustration of the UniNest academic companion dashboard"
 description: "An academic companion app for students with class-session tracking, weekly routines, results, study resources, notes sharing, assignment cover generation, bus schedules and CR information."
 technologies: ["Flutter", "Dart", "Mobile App Development"]

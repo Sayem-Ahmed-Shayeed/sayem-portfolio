@@ -1,145 +1,294 @@
-<div class="globe-shell reveal" id="sylhet-globe" tabindex="0" role="button" aria-pressed="false" aria-label="Center globe on Sylhet, Bangladesh">
-  <canvas width="480" height="480" aria-hidden="true"></canvas>
-  <div class="globe-copy">
-    <span class="globe-kicker">Based in</span>
-    <strong>Sylhet, Bangladesh</strong>
-  </div>
-  <div class="globe-label" aria-hidden="true"><span></span>Sylhet · 24.89°N, 91.87°E</div>
-</div>
+---
+// Sylhet globe. Land is drawn from real coastlines (src/data/globe-dots.json), Bangladesh in gold,
+// with the live day/night side and Sylhet's local time.
+// First view: the globe turns to Sylhet while land appears in a wave spreading from Sylhet,
+// then Bangladesh lights up, the pin drops and the coordinates count in. Afterwards sonar rings
+// pulse from Sylhet; dragging turns the globe and it springs back home.
+import { site } from '../data/site';
+const home = { lat: 24.8949, lon: 91.8687 };
+---
+<figure class="globe" data-lat={home.lat} data-lon={home.lon}>
+  <canvas role="img" aria-label={`Globe turned to ${site.location}, with Bangladesh highlighted`}></canvas>
+  <figcaption>
+    <span class="g-place">Based in {site.location}</span>
+    <span class="g-meta"><span data-coords>{home.lat.toFixed(2)}° N, {home.lon.toFixed(2)}° E</span><span data-time hidden></span></span>
+  </figcaption>
+</figure>
+
 <script>
-  const shell = document.querySelector('#sylhet-globe');
-  const canvas = shell?.querySelector('canvas');
-  if (shell && canvas) {
-    const ctx = canvas.getContext('2d');
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const cssSize = 360;
-    canvas.width = cssSize * dpr;
-    canvas.height = cssSize * dpr;
-    canvas.style.width = `${cssSize}px`;
-    canvas.style.height = `${cssSize}px`;
-    if (!ctx) throw new Error('Canvas rendering unavailable');
-    ctx.scale(dpr, dpr);
+  import dots from '../data/globe-dots.json';
 
-    const targetLon = 91.8687;
-    const targetLat = 24.8949;
-    let rotation = 75;
-    let targetRotation = 75;
-    let active = false;
-    let raf = 0;
-    let visible = false;
-    let lastTime = 0;
-    const motion = matchMedia('(prefers-reduced-motion: reduce)');
-    // Coarse geographic silhouettes, sampled once into a lightweight dot map.
-    const continents = [
-      [[-17,35],[10,37],[34,30],[51,12],[42,-12],[30,-35],[18,-35],[10,-5],[-10,5]],
-      [[-10,36],[-10,58],[15,71],[40,65],[70,75],[120,72],[170,60],[145,43],[130,32],[120,5],[105,-5],[95,20],[78,8],[65,25],[42,12],[35,35]],
-      [[112,-11],[135,-12],[154,-25],[145,-39],[116,-34]],
-      [[-168,68],[-135,72],[-105,73],[-55,52],[-65,43],[-82,25],[-98,16],[-115,30],[-130,52]],
-      [[-80,10],[-60,10],[-35,-6],[-45,-25],[-68,-55],[-76,-30]],
-      [[-55,60],[-25,70],[-35,83],[-60,80]],
-      [[47,-13],[51,-16],[48,-25],[44,-22]],
-      [[130,32],[142,45],[146,43],[138,33]]
-    ];
-    const inside = (x: number, y: number, polygon: number[][]) => {
-      let result = false;
-      for (let i=0,j=polygon.length-1;i<polygon.length;j=i++) {
-        const [xi,yi]=polygon[i], [xj,yj]=polygon[j];
-        if ((yi>y)!==(yj>y) && x<(xj-xi)*(y-yi)/(yj-yi)+xi) result=!result;
-      }
-      return result;
-    };
-    const land: number[][] = [];
-    for(let lat=-55;lat<=80;lat+=3) for(let lon=-180;lon<180;lon+=3) {
-      if(continents.some(polygon=>inside(lon,lat,polygon))) land.push([lat,lon]);
+  const D = Math.PI / 180;
+  const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
+  const easeOut = (t: number) => 1 - Math.pow(1 - clamp01(t), 4);
+  const easeBack = (t: number) => { t = clamp01(t); const c = 1.9; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+  const wrap = (deg: number) => ((deg + 540) % 360) - 180;
+
+  // Static per-dot data: trig of latitude, longitude in radians, position on the unit sphere.
+  const prepare = (flat: number[]) => {
+    const n = flat.length / 2;
+    const sinLat = new Float32Array(n), cosLat = new Float32Array(n), lon = new Float32Array(n);
+    const vx = new Float32Array(n), vy = new Float32Array(n), vz = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const la = (flat[2 * i] / 10) * D, lo = (flat[2 * i + 1] / 10) * D;
+      sinLat[i] = Math.sin(la); cosLat[i] = Math.cos(la); lon[i] = lo;
+      vx[i] = cosLat[i] * Math.cos(lo); vy[i] = cosLat[i] * Math.sin(lo); vz[i] = sinLat[i];
     }
+    return { n, sinLat, cosLat, lon, vx, vy, vz };
+  };
+  const LAND = prepare(dots.land), BD = prepare(dots.bd);
 
-    const theme = () => getComputedStyle(document.documentElement);
-    const project = (lat: number, lon: number, centerLon: number) => {
-      const λ = (lon - centerLon) * Math.PI / 180;
-      const φ = lat * Math.PI / 180;
-      const cosφ = Math.cos(φ);
-      return { x: Math.sin(λ) * cosφ, y: -Math.sin(φ), z: Math.cos(λ) * cosφ };
+  // Where the sun is overhead right now (declination and solar longitude, accurate to about a degree).
+  const sunVector = (now: Date) => {
+    const day = (now.getTime() - Date.UTC(now.getUTCFullYear(), 0, 0)) / 864e5;
+    const decl = -23.44 * Math.cos((2 * Math.PI / 365) * (day + 10)) * D;
+    const lon = (12 - (now.getUTCHours() + now.getUTCMinutes() / 60)) * 15 * D;
+    return [Math.cos(decl) * Math.cos(lon), Math.cos(decl) * Math.sin(lon), Math.sin(decl)];
+  };
+
+  document.querySelectorAll<HTMLElement>('.globe').forEach(fig => {
+    const canvas = fig.querySelector('canvas')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const coordsEl = fig.querySelector<HTMLElement>('[data-coords]')!;
+    const timeEl = fig.querySelector<HTMLElement>('[data-time]')!;
+    const home = { lat: Number(fig.dataset.lat), lon: Number(fig.dataset.lon) };
+    const HOME_TILT = 22;
+    const motionOK = matchMedia('(prefers-reduced-motion: no-preference)').matches;
+
+    // angular distance of each land dot from Sylhet, 0..1, sets when it appears in the intro wave
+    const hv = [Math.cos(home.lat * D) * Math.cos(home.lon * D), Math.cos(home.lat * D) * Math.sin(home.lon * D), Math.sin(home.lat * D)];
+    const dist = new Float32Array(LAND.n);
+    for (let i = 0; i < LAND.n; i++) dist[i] = Math.acos(Math.max(-1, Math.min(1, LAND.vx[i] * hv[0] + LAND.vy[i] * hv[1] + LAND.vz[i] * hv[2]))) / Math.PI;
+
+    // daylight per land dot, refreshed every minute
+    const light = new Float32Array(LAND.n);
+    let sun = [1, 0, 0];
+    const updateSun = () => {
+      sun = sunVector(new Date());
+      for (let i = 0; i < LAND.n; i++) {
+        const s = LAND.vx[i] * sun[0] + LAND.vy[i] * sun[1] + LAND.vz[i] * sun[2];
+        light[i] = clamp01((s + 0.1) / 0.2);
+      }
+    };
+    const clock = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Dhaka', hour: 'numeric', minute: '2-digit', hour12: true });
+    const updateTime = () => { timeEl.textContent = `, ${clock.format(new Date())} local time`; timeEl.hidden = false; };
+    updateSun(); updateTime();
+    setInterval(() => { updateSun(); updateTime(); if (!running) draw(performance.now()); }, 30000);
+
+    let colors = { ink: '#17324d', gold: '#c69a45', paper2: '#fffdf8', dark: false };
+    const readColors = () => {
+      const s = getComputedStyle(document.documentElement);
+      colors = { ink: s.getPropertyValue('--ink').trim(), gold: s.getPropertyValue('--gold').trim(), paper2: s.getPropertyValue('--paper-2').trim(), dark: document.documentElement.dataset.theme === 'dark' };
+    };
+    readColors();
+
+    let size = 0, dpr = 1;
+    const resize = () => {
+      size = canvas.clientWidth; dpr = Math.min(devicePixelRatio || 1, 2);
+      canvas.width = Math.round(size * dpr); canvas.height = Math.round(size * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    function draw() {
-      const s = theme();
-      const ink = s.getPropertyValue('--ink').trim();
-      const gold = s.getPropertyValue('--gold').trim();
-      const paper2 = s.getPropertyValue('--paper-2').trim();
-      ctx.clearRect(0, 0, cssSize, cssSize);
-      const cx = cssSize / 2, cy = cssSize / 2, r = 136;
-      const grad = ctx.createRadialGradient(cx - 48, cy - 58, 10, cx, cy, r);
-      grad.addColorStop(0, paper2);
-      grad.addColorStop(1, 'transparent');
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = grad; ctx.fill();
-      ctx.strokeStyle = ink; ctx.globalAlpha = .14; ctx.lineWidth = 1;
+    // view state
+    let lon0 = home.lon, lat0 = HOME_TILT;
+    let introStart = -1;                       // -1: not started; Infinity when skipped
+    const INTRO = 2900;
+    let rings: number[] = [];
+    let nextRing = 0;
+    let dragging = false, lastX = 0, lastY = 0, velLon = 0, velLat = 0, releasedAt = -1e9;
+    let lastT = 0;
+
+    const intro = (t: number) => (introStart < 0 ? 0 : introStart === Infinity ? INTRO : t - introStart);
+
+    function draw(t: number) {
+      const it = intro(t);
+      const armed = motionOK && introStart < 0;
+      const w = size, cx = w / 2, cy = w / 2, r = w * 0.39;
+      ctx.clearRect(0, 0, w, w);
+      const { ink, gold, paper2, dark } = colors;
+      const sinP = Math.sin(lat0 * D), cosP = Math.cos(lat0 * D), l0 = lon0 * D;
+
+      // atmosphere and disc
+      const glow = ctx.createRadialGradient(cx, cy, r * 0.96, cx, cy, r * 1.16);
+      glow.addColorStop(0, gold); glow.addColorStop(1, 'transparent');
+      ctx.globalAlpha = dark ? 0.16 : 0.11; ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(cx, cy, r * 1.16, 0, Math.PI * 2); ctx.fill();
+      // the sphere: a clean disc with a soft highlight up and to the left
+      ctx.globalAlpha = 1; ctx.fillStyle = paper2;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+      const disc = ctx.createRadialGradient(cx - r * 0.38, cy - r * 0.42, r * 0.02, cx - r * 0.1, cy - r * 0.1, r * 1.1);
+      disc.addColorStop(0, dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.9)'); disc.addColorStop(1, 'transparent');
+      ctx.fillStyle = disc; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+
+      // night side: shade toward the point opposite the sun
+      const sunLon = Math.atan2(sun[1], sun[0]), sunLat = Math.asin(sun[2]);
+      const sl = sunLon - l0;
+      const px = Math.cos(sunLat) * Math.sin(sl);
+      const py = cosP * Math.sin(sunLat) - sinP * Math.cos(sunLat) * Math.cos(sl);
+      const shade = ctx.createLinearGradient(cx + px * r, cy - py * r, cx - px * r, cy + py * r);
+      shade.addColorStop(0.5, 'transparent'); shade.addColorStop(1, dark ? 'rgba(0,0,0,0.45)' : 'rgba(23,50,77,0.07)');
+      ctx.fillStyle = shade; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = dark ? 0.22 : 0.2; ctx.strokeStyle = ink; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
 
-      for (let lat=-60; lat<=60; lat+=30) {
-        ctx.beginPath(); let started=false;
-        for (let lon=-180; lon<=180; lon+=4) {
-          const p = project(lat, lon, rotation); if (p.z < 0) { started=false; continue; }
-          const x=cx+p.x*r, y=cy+p.y*r;
-          if(!started){ctx.moveTo(x,y);started=true;} else ctx.lineTo(x,y);
-        }
-        ctx.globalAlpha=.16; ctx.strokeStyle=ink; ctx.stroke();
+      // graticule
+      ctx.globalAlpha = dark ? 0.1 : 0.08; ctx.beginPath();
+      const seg = (la: number, lo: number, first: boolean) => {
+        const cl = Math.cos(la * D), x = cl * Math.sin(lo * D - l0), y = cosP * Math.sin(la * D) - sinP * cl * Math.cos(lo * D - l0), z = sinP * Math.sin(la * D) + cosP * cl * Math.cos(lo * D - l0);
+        if (z < 0) return true;
+        if (first) ctx.moveTo(cx + x * r, cy - y * r); else ctx.lineTo(cx + x * r, cy - y * r);
+        return false;
+      };
+      for (let la = -60; la <= 60; la += 30) { let pen = true; for (let lo = -180; lo <= 180; lo += 4) pen = seg(la, lo, pen); }
+      for (let lo = -180; lo < 180; lo += 30) { let pen = true; for (let la = -84; la <= 84; la += 4) pen = seg(la, lo, pen); }
+      ctx.stroke();
+      if (armed) { ctx.globalAlpha = 1; return; }
+
+      // land, batched into a few alpha levels so each frame is a handful of fills
+      const LEVELS = 10;
+      const paths = Array.from({ length: LEVELS }, () => new Path2D());
+      for (let i = 0; i < LAND.n; i++) {
+        const lam = LAND.lon[i] - l0, cl = Math.cos(lam);
+        const z = sinP * LAND.sinLat[i] + cosP * LAND.cosLat[i] * cl;
+        if (z <= 0.02) continue;
+        const reveal = clamp01((it - 150 - dist[i] * 1500) / 380);
+        if (reveal <= 0) continue;
+        const x = LAND.cosLat[i] * Math.sin(lam), y = cosP * LAND.sinLat[i] - sinP * LAND.cosLat[i] * cl;
+        const a = (0.22 + 0.78 * z) * (0.42 + 0.58 * light[i]) * reveal;
+        const rad = (0.75 + 0.6 * z) * (0.4 + 0.6 * reveal);
+        const p = paths[Math.min(LEVELS - 1, Math.floor(a * LEVELS))];
+        p.moveTo(cx + x * r + rad, cy - y * r); p.arc(cx + x * r, cy - y * r, rad, 0, Math.PI * 2);
       }
-      for (let lon=-180; lon<180; lon+=30) {
-        ctx.beginPath(); let started=false;
-        for (let lat=-88; lat<=88; lat+=3) {
-          const p=project(lat,lon,rotation); if(p.z<0){started=false;continue;}
-          const x=cx+p.x*r,y=cy+p.y*r;
-          if(!started){ctx.moveTo(x,y);started=true;} else ctx.lineTo(x,y);
+      ctx.fillStyle = ink;
+      paths.forEach((p, k) => { ctx.globalAlpha = (dark ? 0.85 : 0.9) * (k + 0.5) / LEVELS; ctx.fill(p); });
+
+      // Bangladesh
+      const bdIn = easeOut((it - 1700) / 700);
+      if (bdIn > 0) {
+        const p = new Path2D();
+        for (let i = 0; i < BD.n; i++) {
+          const lam = BD.lon[i] - l0, cl = Math.cos(lam);
+          const z = sinP * BD.sinLat[i] + cosP * BD.cosLat[i] * cl;
+          if (z <= 0.05) continue;
+          const x = BD.cosLat[i] * Math.sin(lam), y = cosP * BD.sinLat[i] - sinP * BD.cosLat[i] * cl;
+          p.moveTo(cx + x * r + 0.9, cy - y * r); p.arc(cx + x * r, cy - y * r, 0.9, 0, Math.PI * 2);
         }
-        ctx.globalAlpha=.14; ctx.strokeStyle=ink; ctx.stroke();
+        ctx.globalAlpha = bdIn; ctx.fillStyle = gold; ctx.fill(p);
       }
 
-      for(const [lat,lon] of land) {
-        const p=project(lat,lon,rotation);
-        if(p.z<=0) continue;
-        ctx.globalAlpha=.22+p.z*.43; ctx.fillStyle=ink;
-        ctx.beginPath(); ctx.arc(cx+p.x*r,cy+p.y*r,1.25,0,Math.PI*2); ctx.fill();
+      // Sylhet: pin, halo and sonar rings
+      const hl = home.lon * D - l0, hcl = Math.cos(home.lat * D);
+      const hz = sinP * Math.sin(home.lat * D) + cosP * hcl * Math.cos(hl);
+      const pin = easeBack((it - 2050) / 520);
+      if (hz > 0.05 && pin > 0) {
+        const hx = cx + hcl * Math.sin(hl) * r, hy = cy - (cosP * Math.sin(home.lat * D) - sinP * hcl * Math.cos(hl)) * r;
+        const fade = clamp01((hz - 0.05) / 0.25);
+        ctx.strokeStyle = gold; ctx.lineWidth = 1.2;
+        rings = rings.filter(start => t - start < 2400);
+        for (const start of rings) {
+          const k = (t - start) / 2400;
+          ctx.globalAlpha = (1 - k) * 0.6 * fade;
+          ctx.beginPath(); ctx.arc(hx, hy, 6 + easeOut(k) * w * 0.12, 0, Math.PI * 2); ctx.stroke();
+        }
+        // leader line from the pin down to the caption under the globe
+        const lead = easeOut((it - 2350) / 550);
+        if (lead > 0) {
+          const x0 = hx, y0 = hy + 7, x1 = cx, y1 = w;
+          ctx.globalAlpha = 0.65 * fade; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + (x1 - x0) * lead, y0 + (y1 - y0) * lead); ctx.stroke();
+          ctx.lineWidth = 1.2;
+        }
+        ctx.globalAlpha = 0.22 * fade; ctx.fillStyle = gold;
+        ctx.beginPath(); ctx.arc(hx, hy, 10 * pin, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = fade;
+        ctx.beginPath(); ctx.arc(hx, hy, 3.6 * pin, 0, Math.PI * 2); ctx.fill();
+        ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(hx, hy, 6.5 * pin, 0, Math.PI * 2); ctx.stroke();
       }
-      const syl = project(targetLat, targetLon, rotation);
-      if (syl.z > 0) {
-        const x = cx + syl.x*r, y = cy + syl.y*r;
-        ctx.globalAlpha = .18; ctx.beginPath(); ctx.arc(x,y,18,0,Math.PI*2); ctx.fillStyle=gold; ctx.fill();
-        ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(x,y,5.5,0,Math.PI*2); ctx.fillStyle=gold; ctx.fill();
-        ctx.beginPath(); ctx.arc(x,y,9,0,Math.PI*2); ctx.strokeStyle=gold; ctx.lineWidth=1.5; ctx.stroke();
-      }
-      ctx.globalAlpha=1;
+      ctx.globalAlpha = 1;
     }
 
-    function animate(time = 0) {
-      const elapsed = lastTime ? Math.min(time-lastTime,50) : 16;
-      lastTime = time;
-      if (!motion.matches) {
-        if (active) targetRotation = targetLon;
-        else targetRotation += elapsed * .002;
-        let delta = ((targetRotation - rotation + 540) % 360) - 180;
-        rotation += delta * (active ? .055 : .02);
+    // where the view should be, and the intro's counters
+    function step(t: number) {
+      const dt = lastT ? Math.min(t - lastT, 50) : 16; lastT = t;
+      const it = intro(t);
+      if (it < INTRO) {
+        const k = easeOut(it / 2500);
+        lon0 = home.lon - 80 * (1 - k);
+        lat0 = HOME_TILT * k;
+        const c = easeOut((it - 300) / 2100);
+        coordsEl.textContent = `${(home.lat * c).toFixed(2)}° N, ${(home.lon * c).toFixed(2)}° E`;
+        if (it >= 2300 && nextRing === 0) nextRing = t;
+        if (it >= 2750) fig.classList.add('is-labelled');
+      } else if (dragging) {
+        // view follows the pointer
+      } else if (t - releasedAt < 900) {
+        lon0 += velLon * dt; lat0 = Math.max(-50, Math.min(70, lat0 + velLat * dt));
+        velLon *= Math.pow(0.9, dt / 16); velLat *= Math.pow(0.9, dt / 16);
+      } else {
+        // home, with a slow sway so the globe never sits dead still
+        const sway = 4 * Math.sin((t - introStart - INTRO) / 1900);
+        const k = 1 - Math.exp(-dt / 260);
+        lon0 += wrap(home.lon + sway - lon0) * k;
+        lat0 += (HOME_TILT - lat0) * k;
       }
-      draw();
-      raf = visible && !document.hidden && !motion.matches ? requestAnimationFrame(animate) : 0;
+      if (nextRing && t >= nextRing) { rings.push(t); nextRing = t + 2600; }
     }
-    const activate = () => { active = true; shell.classList.add('is-active'); shell.setAttribute('aria-pressed','true'); if(motion.matches) { rotation=targetLon; draw(); } };
-    const deactivate = () => { active = false; shell.classList.remove('is-active'); shell.setAttribute('aria-pressed','false'); targetRotation = rotation; };
-    shell.addEventListener('mouseenter', activate);
-    shell.addEventListener('mouseleave', deactivate);
-    shell.addEventListener('focus', activate);
-    shell.addEventListener('blur', deactivate);
-    shell.addEventListener('click', () => active ? deactivate() : activate());
-    shell.addEventListener('keydown', event => {
-      if(event.key==='Enter' || event.key===' ') { event.preventDefault(); active ? deactivate() : activate(); }
-    });
-    const sync = () => {
-      cancelAnimationFrame(raf); raf=0; lastTime=0;
-      if(visible && !document.hidden) animate();
+
+    let running = false, visible = false, raf = 0;
+    const frame = (t: number) => {
+      step(t); draw(t);
+      raf = running ? requestAnimationFrame(frame) : 0;
     };
-    new IntersectionObserver(entries => { visible=entries[0].isIntersecting; sync(); }).observe(shell);
-    document.addEventListener('visibilitychange',sync);
-    motion.addEventListener('change',sync);
-    draw();
-    new MutationObserver(draw).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
-  }
+    const sync = () => {
+      const should = motionOK && visible && !document.hidden;
+      if (should && !running) { running = true; lastT = 0; raf = requestAnimationFrame(frame); }
+      if (!should && running) { running = false; cancelAnimationFrame(raf); raf = 0; }
+    };
+
+    new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      if (motionOK && introStart < 0 && e.intersectionRatio >= 0.4) {
+        introStart = performance.now();
+        coordsEl.textContent = '0.00° N, 0.00° E';
+        fig.classList.add('is-armed');
+      }
+      sync();
+    }, { threshold: [0, 0.4] }).observe(fig);
+    document.addEventListener('visibilitychange', sync);
+
+    // drag to turn; horizontal on touch so the page still scrolls
+    canvas.addEventListener('pointerdown', e => {
+      if (motionOK && intro(performance.now()) < INTRO) return;
+      dragging = true; lastX = e.clientX; lastY = e.clientY; velLon = velLat = 0;
+      canvas.setPointerCapture(e.pointerId); fig.classList.add('is-dragging');
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const dx = e.clientX - lastX, dy = e.clientY - lastY; lastX = e.clientX; lastY = e.clientY;
+      const k = 180 / (Math.PI * size * 0.39);
+      lon0 -= dx * k; lat0 = Math.max(-50, Math.min(70, lat0 + dy * k));
+      velLon = -dx * k / 16; velLat = dy * k / 16;
+      if (!running) draw(performance.now());
+    });
+    const release = () => { if (!dragging) return; dragging = false; releasedAt = performance.now(); fig.classList.remove('is-dragging'); };
+    canvas.addEventListener('pointerup', release);
+    canvas.addEventListener('pointercancel', release);
+
+    new ResizeObserver(() => { resize(); draw(performance.now()); }).observe(canvas);
+    new MutationObserver(() => { readColors(); if (!running) draw(performance.now()); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    if (!motionOK) introStart = Infinity;
+    resize(); draw(performance.now());
+  });
 </script>
+
+<style>
+  .globe { margin:0; display:flex; flex-direction:column; align-items:center; width:100%; }
+  canvas { display:block; width:100%; max-width:400px; aspect-ratio:1; cursor:grab; touch-action:pan-y; }
+  .is-dragging canvas { cursor:grabbing; }
+  /* the caption is the pin's label: the leader line drawn on the canvas ends at its top edge */
+  figcaption { display:flex; flex-direction:column; align-items:center; gap:2px; padding-top:6px; text-align:center; transition:opacity .5s ease, transform .5s ease; }
+  .g-place { font:400 15.5px/1.3 var(--serif); color:var(--ink); }
+  .g-meta { font:400 13px/1.5 var(--sans); color:var(--ink-2); font-variant-numeric:tabular-nums; }
+  .is-armed:not(.is-labelled) figcaption { opacity:0; transform:translateY(-4px); }
+</style>

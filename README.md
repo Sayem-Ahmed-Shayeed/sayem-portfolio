@@ -31,7 +31,7 @@ featured: true
 status: "MVP"
 role: "Creator"
 team: "Solo"
-image: "/images/projects/project-name.png"
+image: "../../assets/projects/project-name.png"
 alt: "Project screenshot"
 description: "One concise sentence."
 technologies: ["Flutter", "Python"]
@@ -71,10 +71,13 @@ Edit `src/data/site.ts` for:
 There is intentionally no CV button right now. When the CV is ready, add it to `public/files/cv.pdf` and add one button/link in the hero social/action area.
 
 ## Images
-- Profile photo: `public/images/profile/sayem.png`
-- Achievement assets: `public/images/achievements/`
-- Project images: `public/images/projects/`
-- Research figures: `public/images/research/`
+Content images live in `src/assets/` so Astro can resize them and serve WebP at build time. In Markdown front matter, reference them with a path relative to the Markdown file (for example `../../assets/research/figure.png`).
+- Profile photo: `src/assets/profile/sayem.jpg`
+- Achievement assets: `src/assets/achievements/` (imported in `src/data/site.ts`)
+- Project images: `src/assets/projects/`
+- Research figures: `src/assets/research/`
+
+Files that are referenced by URL rather than imported (theme-toggle backgrounds, the VS Code toolbox icon, the favicon) stay in `public/`.
 
 ## Vercel
 Import this GitHub repository into Vercel. The included `vercel.json` uses Astro's static build output, and pushes to `main` trigger redeployments.

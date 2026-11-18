@@ -11,7 +11,7 @@ authors:
 venue: "2026 IEEE 2nd International Conference on Quantum Photonics, Artificial Intelligence & Networking (QPAIN)"
 status: "Published"
 featured: true
-image: "/images/research/bongofishX.jpeg"
+image: "../../assets/research/bongofishX.jpeg"
 alt: "BongoFishX research visual"
 tags: ["Computer Vision", "Deep Learning", "Explainable AI"]
 links:

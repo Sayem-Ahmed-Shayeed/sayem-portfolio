@@ -1,11 +1,17 @@
 ---
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import portrait from '../assets/profile/sayem.jpg';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SectionHeader from '../components/SectionHeader.astro';
-import Globe from '../components/Globe.astro';
-import PublicationCard from '../components/PublicationCard.astro';
-import ProjectCard from '../components/ProjectCard.astro';
 import Timeline from '../components/Timeline.astro';
+import FactsTrack from '../components/facts/FactsTrack.astro';
+import About from '../components/about/About.astro';
+import ResearchMap from '../components/research/ResearchMap.astro';
+import { buildWorks } from '../data/research';
+import CardsPlates from '../components/cards/CardsPlates.astro';
+import CardsRows from '../components/cards/CardsRows.astro';
+import { paperEntry, datasetEntry, projectEntry } from '../data/cards';
 import { site, experience, education, achievements } from '../data/site';
 
 const projects = (await getCollection('projects')).sort((a,b) => b.data.date.valueOf() - a.data.date.valueOf());
@@ -13,8 +19,12 @@ const publications = (await getCollection('publications')).sort((a,b) => b.data.
 const datasets = (await getCollection('datasets')).sort((a,b) => b.data.year - a.data.year);
 const news = (await getCollection('news')).sort((a,b) => b.data.date.valueOf() - a.data.date.valueOf());
 const announcement = news.find(n => n.data.featured) ?? news[0];
+const works = buildWorks(publications, datasets);
+const paperEntries = publications.map(paperEntry);
+const datasetEntries = datasets.map(datasetEntry);
+const projectEntries = projects.map(projectEntry);
 const skillIcons: Record<string, string> = {
-  Python: 'https://cdn.simpleicons.org/python/3776AB', C: 'https://cdn.simpleicons.org/c/394057', 'C++': 'https://cdn.simpleicons.org/cplusplus/00599C', Java: 'https://cdn.simpleicons.org/openjdk/EA2D2E', Dart: 'https://cdn.simpleicons.org/dart/0175C2', Flutter: 'https://cdn.simpleicons.org/flutter/02569B', OOP: 'https://cdn.simpleicons.org/abstract/6B7280', 'Data Structures': 'https://cdn.simpleicons.org/algolia/003DFF', Algorithms: 'https://cdn.simpleicons.org/thealgorithms/00A98F', DBMS: 'https://cdn.simpleicons.org/databricks/FF3621', Supabase: 'https://cdn.simpleicons.org/supabase/3ECF8E', Firebase: 'https://cdn.simpleicons.org/firebase/FFCA28', MySQL: 'https://cdn.simpleicons.org/mysql/4479A1', 'Android Studio': 'https://cdn.simpleicons.org/androidstudio/3DDC84', 'VS Code': 'https://cdn.simpleicons.org/visualstudiocode/007ACC'
+  Python: 'https://cdn.simpleicons.org/python/3776AB', C: 'https://cdn.simpleicons.org/c/394057', 'C++': 'https://cdn.simpleicons.org/cplusplus/00599C', Java: 'https://cdn.simpleicons.org/openjdk/EA2D2E', Dart: 'https://cdn.simpleicons.org/dart/0175C2', Flutter: 'https://cdn.simpleicons.org/flutter/02569B', OOP: 'https://cdn.simpleicons.org/abstract/6B7280', 'Data Structures': 'https://cdn.simpleicons.org/algolia/003DFF', Algorithms: 'https://cdn.simpleicons.org/thealgorithms/00A98F', DBMS: 'https://cdn.simpleicons.org/databricks/FF3621', Supabase: 'https://cdn.simpleicons.org/supabase/3ECF8E', Firebase: 'https://cdn.simpleicons.org/firebase/FFCA28', MySQL: 'https://cdn.simpleicons.org/mysql/4479A1', 'Android Studio': 'https://cdn.simpleicons.org/androidstudio/3DDC84', 'VS Code': '/images/icons/vscode.svg'
 };
 ---
 <BaseLayout>
@@ -47,11 +57,10 @@ const skillIcons: Record<string, string> = {
     <section class="hero section-pad" id="about">
       <div class="hero-copy reveal hero-centered">
         <div class="portrait-circle">
-          <img src="/images/profile/sayem.png" alt="Sayem Ahmed Shayeed standing outdoors in a green landscape" width="400" height="400" loading="eager" fetchpriority="high" />
+          <Image src={portrait} alt="Sayem Ahmed Shayeed in a dark suit at night, with string lights in the background" width={172} densities={[1, 2, 3]} loading="eager" fetchpriority="high" />
         </div>
         <div class="availability-wrap">
           <p class="availability"><span></span>{site.availability}</p>
-          <img class="hero-rabbit-image" src="/images/hero-rabbit-realistic.png" alt="" width="1360" height="1156" aria-hidden="true" />
         </div>
         <p class="eyebrow">Research · Engineering · Mobile</p>
         <h1>{site.name}</h1>
@@ -70,52 +79,30 @@ const skillIcons: Record<string, string> = {
         <div class="coding-profiles">
           {site.codingProfiles.map(link => <a class="button" href={link.url} target="_blank" rel="noreferrer">{link.label} <span aria-hidden="true">↗</span></a>)}
         </div>
-        <div class="quick-facts">
-          <div><span class="mono">01</span><strong>{site.university}</strong><small>CSE · {site.graduation}</small></div>
-          <div><span class="mono">02</span><strong>CGPA {site.cgpa}/4.00</strong><small>75% merit tuition waiver</small></div>
-          <div><span class="mono">03</span><strong>{site.location}</strong><small>{site.languages.join(' · ')}</small></div>
-        </div>
+        <FactsTrack />
       </div>
 
-      <div class="about-grid">
-        <div class="about-copy reveal">
-          <p class="eyebrow">About / Focus</p>
-          <h2>I like building systems that are useful before they are impressive.</h2>
-          <p>I work at the intersection of applied AI and product development: researching problems in healthcare, agriculture and intelligent systems while building mobile and desktop software that people can actually use.</p>
-          <div class="tag-row large">{site.researchInterests.map(i => <span>{i}</span>)}</div>
-        </div>
-        <Globe />
-      </div>
+      <About />
     </section>
 
     <section class="section-pad section-border" id="research">
       <SectionHeader eyebrow="01 / Research" title="Published research" />
-      <div class="research-summary reveal">
-        <div><span class="metric">{publications.length}</span><p>public research entries</p></div>
-        <div><span class="metric">{datasets.length}</span><p>released research dataset</p></div>
-        <div><span class="metric">{site.researchInterests.length}</span><p>research interests</p></div>
-      </div>
+      <ResearchMap works={works} />
     </section>
 
     <section class="section-pad section-border" id="publications">
       <SectionHeader eyebrow="02 / Publications" title="Papers & accepted work" />
-      <div class="academic-list">
-        {publications.map(item => <PublicationCard item={item} />)}
-      </div>
+      <CardsPlates entries={paperEntries} />
     </section>
 
     <section class="section-pad section-border" id="datasets">
       <SectionHeader eyebrow="03 / Research Datasets" title="Released datasets" />
-      <div class="academic-list">
-        {datasets.map(item => <PublicationCard item={item} kind="dataset" />)}
-      </div>
+      <CardsPlates entries={datasetEntries} />
     </section>
 
     <section class="section-pad section-border" id="projects">
       <SectionHeader eyebrow="04 / Projects" title="Projects" />
-      <div class="project-list">
-        {projects.map(project => <ProjectCard project={project} />)}
-      </div>
+      <CardsRows entries={projectEntries} />
     </section>
 
     <section class="section-pad section-border" id="experience">
@@ -133,7 +120,7 @@ const skillIcons: Record<string, string> = {
       <div class="achievement-grid">
         {achievements.map((a, i) => (
           <article class="achievement-card reveal" style={`--delay:${i*50}ms`}>
-            {a.image && <a class="achievement-image" href={a.image} target="_blank"><img src={a.image} alt={`${a.title} certificate`} loading="lazy" /></a>}
+            {a.image && <a class="achievement-image" href={a.image.src} target="_blank" rel="noreferrer"><Image src={a.image} alt={`${a.title} certificate`} width={288} loading="lazy" /></a>}
             <div class="achievement-content">
               <span class="mono">{a.year}</span>
               <h3>{a.title}</h3>
@@ -163,7 +150,7 @@ const skillIcons: Record<string, string> = {
         <div>
           <p class="eyebrow">09 / Contact</p>
           <h2>Research, scholarship or something worth building?</h2>
-          <p>I’m open to research opportunities, scholarships and meaningful software collaborations.</p>
+          <p>I’m open to research opportunities, scholarships and meaningful software collaborations. I speak {new Intl.ListFormat('en-GB', { type: 'conjunction' }).format(site.languages)}.</p>
         </div>
         <div class="contact-actions">
           <a class="button primary large-button" href={`mailto:${site.email}`}>{site.email}</a>

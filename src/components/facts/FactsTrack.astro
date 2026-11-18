@@ -1,0 +1,96 @@
+---
+// Hero facts: the degree drawn term by term (semesters in years 1–2, trimesters after), current term marked.
+// On first view the line draws through the completed terms, then the current term pulses.
+import { site } from '../../data/site';
+
+const plan = site.termPlan;
+const terms = plan.flatMap((count, y) =>
+  Array.from({ length: count }, (_, t) => ({ id: `${y + 1}.${t + 1}`, yearEnd: t === count - 1 }))
+);
+const current = site.currentTerm;
+const state = (id: string) => (id < current ? 'done' : id === current ? 'now' : 'next');
+
+---
+<div class="track" style={`--cols:${terms.length}`}>
+  <div class="track-head">
+    <p class="track-degree">{site.degree}, {site.university}</p>
+    <p class="track-cgpa"><span>{site.cgpa}</span> / 4.00 CGPA</p>
+  </div>
+  <ol class="track-terms" aria-label={`Terms; currently in ${current}`}>
+    {terms.map((t, i) => (
+      <li class:list={[state(t.id), t.yearEnd && 'year-end']} style={`--i:${i}`} aria-current={t.id === current ? 'step' : undefined}>
+        <span class="track-dot" aria-hidden="true"></span>
+        <span class="track-label">{t.id}</span>
+      </li>
+    ))}
+    <li class="track-end" style={`--i:${terms.length}`}><span class="track-dot" aria-hidden="true"></span><span class="track-label">{site.graduation}</span></li>
+  </ol>
+</div>
+
+<script>
+  // Arm the draw-in only when motion is allowed; without JS or with reduced motion the final state shows.
+  const motionOK = matchMedia('(prefers-reduced-motion: no-preference)').matches;
+  if (motionOK && 'IntersectionObserver' in window) {
+    document.querySelectorAll<HTMLElement>('.track').forEach(track => {
+      track.classList.add('is-armed');
+      const io = new IntersectionObserver(([entry]) => {
+        if (!entry.isIntersecting) return;
+        track.classList.add('is-drawn');
+        io.disconnect();
+      }, { threshold: 0.6 });
+      io.observe(track);
+    });
+  }
+</script>
+
+<style>
+  .track { --step:115ms; --dot:11px; --year-gap:10px; width:100%; text-align:left; }
+  .track-head { display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+  .track-head p { margin:0; }
+  .track-degree { font:400 17.5px/1.3 var(--serif); color:var(--ink); }
+  .track-cgpa { font:500 13px/1.4 var(--sans); color:var(--ink-2); }
+  .track-cgpa span { font:400 24px/1 var(--serif); color:var(--ink); }
+
+
+  .track-terms { position:relative; display:grid; grid-template-columns:repeat(var(--cols), minmax(0,1fr)) auto; margin:0; padding:0; list-style:none; }
+  .track-terms::before { content:''; position:absolute; left:calc(var(--dot) / 2); right:calc(var(--dot) / 2); top:calc(var(--dot) / 2 - .5px); height:1px; background:var(--line); }
+  li { --gap-after:0px; position:relative; display:flex; flex-direction:column; gap:8px; }
+  li.year-end { --gap-after:var(--year-gap); margin-right:var(--gap-after); }
+  /* completed stretch: one ink segment from each finished term to the next dot */
+  li.done::after { content:''; position:absolute; z-index:0; left:calc(var(--dot) / 2); top:calc(var(--dot) / 2 - .75px); width:calc(100% + var(--gap-after)); height:1.5px; background:var(--ink); transform-origin:left center; }
+
+  .track-dot { position:relative; z-index:1; width:var(--dot); height:var(--dot); border:1.5px solid var(--ink); border-radius:50%; background:var(--paper); }
+  .done .track-dot { background:var(--ink); }
+  .now .track-dot { background:var(--gold); border-color:var(--gold); box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 22%,transparent); }
+  .now .track-dot::after { content:''; position:absolute; inset:-1.5px; border:1.5px solid var(--gold); border-radius:50%; opacity:0; }
+  .next .track-dot, .track-end .track-dot { border-style:dashed; }
+  .track-label { font:500 11.5px/1.2 var(--sans); color:var(--muted); font-variant-numeric:tabular-nums; }
+  .now .track-label { color:var(--ink); font-weight:600; }
+  .track-end { padding-left:6px; }
+  .track-end .track-label { color:var(--ink); white-space:nowrap; }
+
+  /* draw-in, played once when the track scrolls into view */
+  .is-armed li.done::after { transform:scaleX(0); }
+  .is-armed .done .track-dot { background:var(--paper); }
+  .is-armed .now .track-dot { transform:scale(0); }
+  .is-armed .track-end { opacity:0; }
+  .is-drawn .done .track-dot { animation:track-fill 180ms ease-out calc(var(--i) * var(--step)) both; }
+  .is-drawn li.done::after { animation:track-draw var(--step) linear calc((var(--i) + 1) * var(--step) - 40ms) both; }
+  .is-drawn .now .track-dot { animation:track-pop 460ms cubic-bezier(.3,1.5,.5,1) calc(var(--i) * var(--step)) both; }
+  .is-drawn .now .track-dot::after { animation:track-halo 2.6s ease-out calc(var(--i) * var(--step) + 500ms) infinite; }
+  .is-drawn .track-end { animation:track-appear 420ms ease-out calc(var(--i) * var(--step) + 150ms) both; }
+  @keyframes track-fill { from { background:var(--paper); transform:scale(.55); } to { background:var(--ink); transform:scale(1); } }
+  @keyframes track-draw { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+  @keyframes track-pop { from { transform:scale(0); } to { transform:scale(1); } }
+  @keyframes track-halo { 0% { transform:scale(1); opacity:.6; } 75%, 100% { transform:scale(2.8); opacity:0; } }
+  @keyframes track-appear { from { opacity:0; transform:translateX(-6px); } to { opacity:1; transform:none; } }
+
+  @media (max-width:560px) {
+    .track { --dot:9px; --year-gap:4px; }
+    .track-label { font-size:9.5px; }
+    li:not(.now):not(.track-end):not(:first-child) .track-label { visibility:hidden; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .is-drawn .now .track-dot::after { animation:none; }
+  }
+</style>

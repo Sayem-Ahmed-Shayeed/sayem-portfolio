@@ -1,5 +1,6 @@
 ---
 title: "Reliable Dental Radiograph Diagnosis via Calibrated Hybrid Representation Learning"
+shortTitle: "Dental radiograph diagnosis"
 year: 2026
 authors:
   - "Sayem Ahmed Shayeed"
@@ -8,7 +9,7 @@ authors:
 venue: "ICML 2026 Workshop MusIML Poster — The 6th Muslims in ML (MusIML) Workshop at ICML 2026"
 status: "Published"
 featured: true
-image: "/images/research/icml.png"
+image: "../../assets/research/icml.png"
 alt: "MusIML at ICML 2026 acceptance visual"
 tags: ["Dental Radiograph Analysis", "Medical Imaging", "Representation Learning", "Calibration", "Interpretability", "Healthcare AI"]
 links:

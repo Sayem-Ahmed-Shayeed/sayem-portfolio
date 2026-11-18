@@ -1,3 +1,5 @@
+import hackfusion2026 from '../assets/achievements/hackfusion-2026.png';
+
 export const site = {
   name: 'Sayem Ahmed Shayeed',
   initials: 'SAS',
@@ -5,9 +7,13 @@ export const site = {
   location: 'Sylhet, Bangladesh',
   availability: 'Open to research opportunities & scholarships',
   email: 'shayeedahmed2@gmail.com',
-  university: 'Leading University, Sylhet',
+  university: 'Leading University',
+  degree: 'B.Sc. in CSE',
   cgpa: '3.92',
-  graduation: 'Expected February 2027',
+  graduation: 'February 2027',
+  currentTerm: '4.3',
+  // Terms per year of the degree: two semesters a year for years 1–2, then three trimesters a year.
+  termPlan: [2, 2, 3, 3],
   bio: 'I build practical software for myself and others, while working on research problems across healthcare, agriculture and intelligent systems. My interests span machine learning, deep learning, computer vision, explainable AI, multimodal AI and mobile application development.',
   social: [
     { label: 'GitHub', url: 'https://github.com/Sayem-Ahmed-Shayeed' },
@@ -58,7 +64,7 @@ export const education = [
     date: 'Expected Feb 2027',
     title: 'B.Sc. in Computer Science & Engineering',
     org: 'Leading University, Sylhet',
-    text: 'Currently in 4.2 under a trimester system. CGPA: 3.92 / 4.00.',
+    text: `Currently in ${site.currentTerm} under a trimester system. CGPA: ${site.cgpa} / 4.00.`,
     badge: 'CGPA 3.92'
   },
   { date: 'HSC', title: 'Higher Secondary Certificate (HSC)', org: 'MC College, Sylhet', text: '', badge: 'GPA 5.00' },
@@ -71,7 +77,7 @@ export const achievements = [
     year: 'Apr 19, 2026',
     title: 'HackFusion 2026 Participant',
     detail: 'Innovation Inter-University National Hackathon organized by IEEE Computer Society LU SB Chapter.',
-    image: '/images/achievements/hackfusion-2026.png'
+    image: hackfusion2026
   },
   {
     year: '2024',

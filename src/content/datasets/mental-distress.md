@@ -9,7 +9,7 @@ contributors:
 publisher: "Mendeley Data"
 version: "Version 1"
 doi: "10.17632/twbypxgzym.1"
-image: "/images/research/mental-distress-mendeley.png"
+image: "../../assets/research/mental-distress-mendeley.png"
 alt: "MentalDistress dataset record on Mendeley Data"
 tags: ["NLP", "Mental Health", "Machine Learning", "9,935 samples"]
 links:

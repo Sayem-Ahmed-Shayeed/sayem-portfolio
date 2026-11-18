@@ -5,7 +5,7 @@ featured: false
 status: "3rd Year Project"
 role: "Flutter frontend, API integration and OneSignal notification integration"
 team: "2-person team"
-image: "/images/projects/investify.svg"
+image: "../../assets/projects/investify.svg"
 alt: "Illustration of the Investify founder and investor platform"
 description: "A Shark Tank–style mobile platform where founders can present opportunities and investors can discover and engage with them through a connected app experience."
 technologies: ["Flutter", "Dart", "OneSignal", "REST API", "Firebase", "MongoDB"]

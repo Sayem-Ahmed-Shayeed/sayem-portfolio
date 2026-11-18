@@ -1,0 +1,106 @@
+---
+// About: a short paragraph whose claims are highlighted and footnoted (each note names the work behind
+// the claim), beside the Sylhet globe. On first view each claim is highlighted in turn and its note appears.
+import Globe from '../Globe.astro';
+type Claim = { text: string; n: number };
+const parts: (string | Claim)[] = [
+  'I split my time between research and building. My research is applied AI for ',
+  { text: 'healthcare', n: 1 },
+  ' and ',
+  { text: 'agriculture', n: 2 },
+  ', and I care most about models that ',
+  { text: 'can show why they decided', n: 3 },
+  '. Outside research, I build Flutter and desktop apps that ',
+  { text: 'keep working offline and keep personal data on the device', n: 4 },
+  '.',
+];
+const notes = [
+  { n: 1, title: 'Dental radiograph diagnosis', href: '#work-musiml-icml-2026', text: 'calibrated multi-class diagnosis, 99.1% accuracy on a locked test set. MusIML workshop, ICML 2026.' },
+  { n: 2, title: 'CamelliaOfSylhet', href: '#work-camellia-of-sylhet', text: '1,637 tea-leaf photographs taken in Sylhet’s tea gardens.' },
+  { n: 3, title: 'BongoFishX', href: '#work-bongofishx', text: 'fish-species detectors evaluated with explainable AI, IEEE QPAIN 2026. The dental model adds Grad-CAM evidence.' },
+  { n: 4, title: 'Digital Delta', href: '#project-digital-delta', text: 'an offline-first disaster-response prototype from HackFusion 2026. UniNest and SoundFlow also keep data on the device.' },
+];
+const delay = (n: number) => 250 + (n - 1) * 520;
+---
+<div class="about">
+  <div class="about-text">
+    <p class="eyebrow">About / Focus</p>
+    <h2>I like building systems that are useful before they are impressive.</h2>
+    <p class="about-para">
+      {parts.map(p => typeof p === 'string' ? p : (
+        <><mark class="claim" data-n={p.n} style={`--delay:${delay(p.n)}ms`}>{p.text}</mark><sup><a class="mark-n" href={`#about-note-${p.n}`} data-n={p.n} aria-label={`Note ${p.n}`}>{p.n}</a></sup></>
+      ))}
+    </p>
+    <ol class="about-notes" aria-label="Notes">
+      {notes.map(note => (
+        <li class="note" id={`about-note-${note.n}`} data-n={note.n} style={`--delay:${delay(note.n) + 480}ms`}>
+          <span class="note-n" aria-hidden="true">{note.n}</span>
+          <p><a href={note.href}>{note.title}</a>, {note.text}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+  <Globe />
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.about').forEach(root => {
+    // a claim and its note light up together
+    const items = [...root.querySelectorAll<HTMLElement>('.about-text [data-n]')];
+    const set = (n?: string) => items.forEach(el => el.classList.toggle('is-hot', !!n && el.dataset.n === n));
+    items.forEach(el => {
+      el.addEventListener('pointerenter', () => set(el.dataset.n));
+      el.addEventListener('pointerleave', () => set());
+      el.addEventListener('focusin', () => set(el.dataset.n));
+      el.addEventListener('focusout', () => set());
+    });
+    if (!matchMedia('(prefers-reduced-motion: no-preference)').matches || !('IntersectionObserver' in window)) return;
+    const text = root.querySelector<HTMLElement>('.about-text')!;
+    text.classList.add('is-armed');
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      text.classList.add('is-shown');
+      setTimeout(() => text.classList.remove('is-armed', 'is-shown'), 3200);
+    }, { threshold: 0.45 });
+    io.observe(text);
+  });
+</script>
+
+<style>
+  .about { position:relative; z-index:1; margin-top:44px; padding-top:44px; border-top:1px solid var(--line); display:grid; grid-template-columns:minmax(0,1fr) minmax(300px,420px); gap:56px; align-items:center; text-align:left; }
+  h2 { margin:20px 0 22px; max-width:24ch; font:400 27px/1.22 var(--serif); letter-spacing:-0.01em; color:var(--ink); }
+  .about-para { margin:0; max-width:58ch; font:400 17px/1.85 var(--sans); color:var(--ink-2); text-wrap:pretty; }
+
+  /* highlighter: a marker stroke over the lower part of the line */
+  .claim { --hl:color-mix(in srgb,var(--gold) 30%,transparent); padding:0 .12em; margin:0 -.06em; color:var(--ink); background:linear-gradient(var(--hl),var(--hl)) 0 75% / 100% 72% no-repeat; border-radius:.18em; }
+  .claim.is-hot { --hl:color-mix(in srgb,var(--gold) 52%,transparent); }
+  sup { line-height:0; }
+  .mark-n { margin-left:2px; font:600 11px/1 var(--sans); color:color-mix(in srgb,var(--gold) 65%,var(--ink)); text-decoration:none; }
+
+  .about-notes { margin:26px 0 0; padding:18px 0 0; border-top:1px solid var(--line); list-style:none; display:grid; gap:12px; max-width:58ch; }
+  .note { display:grid; grid-template-columns:16px minmax(0,1fr); font:400 13px/1.55 var(--sans); color:var(--ink-2); transition:color .25s ease; }
+  .note p { margin:0; }
+  .note-n { font-weight:600; color:color-mix(in srgb,var(--gold) 65%,var(--ink)); }
+  .note a { font-weight:600; color:var(--ink); text-decoration:none; }
+  .note a:hover { text-decoration:underline; text-decoration-color:var(--gold); text-underline-offset:3px; }
+  .note.is-hot { color:var(--ink); }
+  .note.is-hot .note-n { color:var(--gold); }
+
+  /* first view: each claim is swept with the highlighter in turn, then its note appears */
+  .is-armed .claim { background-size:0% 72%; }
+  .is-shown .claim { background-size:100% 72%; transition:background-size .65s cubic-bezier(.6,0,.3,1) var(--delay); }
+  .is-armed .note { opacity:0; }
+  .is-shown .note { animation:note-in .45s cubic-bezier(.2,.7,.2,1) var(--delay) both; }
+  @keyframes note-in { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+
+  @media (max-width:980px) { .about { grid-template-columns:minmax(0,1fr) 320px; gap:36px; } }
+  @media (max-width:820px) {
+    .about { grid-template-columns:1fr; gap:24px; }
+    .about :global(.globe) { max-width:380px; justify-self:center; }
+  }
+  @media (max-width:560px) {
+    h2 { font-size:23px; }
+    .about-para { font-size:16px; line-height:1.8; }
+  }
+</style>

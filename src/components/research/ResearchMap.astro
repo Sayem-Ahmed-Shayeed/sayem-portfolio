@@ -1,0 +1,139 @@
+---
+// Research map: areas on the left, works on the right, each work linked to its areas.
+// On first view the areas appear, each sends out its links, every work appears as its first link lands,
+// then each work's links are traced in gold once. Hovering or focusing an area or a work highlights its links.
+import { areas, plural, type Work } from '../../data/research';
+interface Props { works: Work[] }
+const { works } = Astro.props;
+const used = areas.filter(a => works.some(w => w.areas.includes(a.name)));
+const L = used.length, R = works.length;
+const y = (k: number, n: number) => (((k + 0.5) / n) * 100).toFixed(2);
+const papers = works.filter(w => w.kind === 'Paper').length;
+
+// Entrance timing in ms: links leave the areas top to bottom, a work appears once its first link is mostly drawn.
+const DRAW = 700;
+const sentFrom: number[] = [];
+const links = works
+  .flatMap((w, j) => w.areas.map(name => ({ i: used.findIndex(a => a.name === name), j, area: name, work: w.id })))
+  .sort((a, b) => a.i - b.i || a.j - b.j)
+  .map(l => {
+    sentFrom[l.i] = (sentFrom[l.i] ?? -1) + 1;
+    return { ...l, delay: 300 + l.i * 170 + sentFrom[l.i] * 70 };
+  });
+const workDelay = Object.fromEntries(works.map(w => {
+  const arrivals = links.filter(l => l.work === w.id).map(l => l.delay + DRAW * 0.7);
+  return [w.id, Math.round(arrivals.length ? Math.min(...arrivals) : 300)];
+}));
+const settle = Math.max(...links.map(l => l.delay + DRAW), ...Object.values(workDelay).map(d => d + 500));
+---
+<div class="map-wrap">
+  <div class="map" style={`--rows-l:${L}; --rows-r:${R}; --draw:${DRAW}ms`} data-settle={settle}>
+    <ul class="map-areas">
+      {used.map((a, i) => (
+        <li data-area={a.name} tabindex="0" style={`--delay:${i * 80}ms`}><span class="full">{a.name}</span><span class="short" aria-hidden="true">{a.short}</span></li>
+      ))}
+    </ul>
+    <svg class="map-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      {links.map(l => (
+        <path d={`M0 ${y(l.i, L)} C50 ${y(l.i, L)} 50 ${y(l.j, R)} 100 ${y(l.j, R)}`} data-area={l.area} data-work={l.work} style={`--delay:${l.delay}ms`} />
+      ))}
+    </svg>
+    <ul class="map-works">
+      {works.map(w => (
+        <li data-work={w.id} style={`--delay:${workDelay[w.id]}ms`}>
+          <a href={w.href}><span class="t">{w.title}</span><span class="m">{w.kind}, {w.venue}</span><span class="vh">Areas: {w.areas.join(', ')}.</span></a>
+        </li>
+      ))}
+    </ul>
+  </div>
+  <p class="map-caption">{plural(works.length, 'published work')} ({plural(papers, 'paper')}, {plural(works.length - papers, 'dataset')}) across {plural(used.length, 'research area')}.<span class="hint"> Hover an area or a work to trace its links.</span></p>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.map').forEach(map => {
+    const paths = [...map.querySelectorAll<SVGPathElement>('path')];
+    const areaItems = [...map.querySelectorAll<HTMLElement>('li[data-area]')];
+    const workItems = [...map.querySelectorAll<HTMLElement>('li[data-work]')];
+    const clear = () => { map.classList.remove('has-focus'); map.querySelectorAll('.hot').forEach(el => el.classList.remove('hot')); };
+    const focus = (area?: string, work?: string) => {
+      clear(); map.classList.add('has-focus');
+      const hot = paths.filter(p => (area && p.dataset.area === area) || (work && p.dataset.work === work));
+      hot.forEach(p => p.classList.add('hot'));
+      areaItems.forEach(li => { if (hot.some(p => p.dataset.area === li.dataset.area)) li.classList.add('hot'); });
+      workItems.forEach(li => { if (hot.some(p => p.dataset.work === li.dataset.work)) li.classList.add('hot'); });
+    };
+    areaItems.forEach(li => { const on = () => focus(li.dataset.area); li.addEventListener('pointerenter', on); li.addEventListener('focus', on); li.addEventListener('pointerleave', clear); li.addEventListener('blur', clear); });
+    workItems.forEach(li => { const on = () => focus(undefined, li.dataset.work); li.addEventListener('pointerenter', on); li.addEventListener('focusin', on); li.addEventListener('pointerleave', clear); li.addEventListener('focusout', clear); });
+
+    if (!matchMedia('(prefers-reduced-motion: no-preference)').matches || !('IntersectionObserver' in window)) return;
+
+    // After the entrance, trace each work's links once; any pointer or keyboard use of the map ends it.
+    let touring = true;
+    const stopTour = () => { if (!touring) return; touring = false; map.classList.remove('is-touring'); clear(); };
+    map.addEventListener('pointerover', stopTour);
+    map.addEventListener('focusin', stopTour);
+    const tour = (k: number) => {
+      if (!touring) return;
+      if (k === workItems.length) { stopTour(); return; }
+      focus(undefined, workItems[k].dataset.work);
+      setTimeout(() => tour(k + 1), 1100);
+    };
+
+    map.classList.add('is-armed');
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      map.classList.add('is-shown');
+      setTimeout(() => {
+        map.classList.remove('is-armed', 'is-shown');
+        if (touring) { map.classList.add('is-touring'); tour(0); }
+      }, Number(map.dataset.settle) + 300);
+    }, { threshold: 0.5 });
+    io.observe(map);
+  });
+</script>
+
+<style>
+  .map { display:grid; grid-template-columns:minmax(0,1fr) minmax(70px,1.05fr) minmax(0,1.45fr); height:260px; }
+  ul { display:grid; height:100%; margin:0; padding:0; list-style:none; align-items:center; }
+  .map-areas { grid-template-rows:repeat(var(--rows-l), 1fr); }
+  .map-works { grid-template-rows:repeat(var(--rows-r), 1fr); }
+  li { position:relative; transition:opacity .2s ease; }
+  .map-areas li { padding-right:14px; text-align:right; font:500 14px/1.3 var(--sans); color:var(--ink); cursor:default; outline-offset:2px; }
+  .map-works li { padding-left:14px; }
+  .map-works a { display:block; text-decoration:none; }
+  .full { display:inline-block; }
+  .short { display:none; }
+  .t { display:block; font:400 15px/1.3 var(--serif); color:var(--ink); }
+  .m { display:block; margin-top:1px; font:400 12px/1.4 var(--sans); color:var(--muted); }
+  .vh { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .map-works a:hover .t { text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:3px; }
+  .map-links { width:100%; height:100%; overflow:visible; }
+  path { fill:none; stroke:var(--ink); stroke-opacity:.32; stroke-width:1.25; vector-effect:non-scaling-stroke; transition:stroke-opacity .2s ease, stroke .2s ease; }
+  .has-focus path { stroke-opacity:.08; }
+  .has-focus path.hot { stroke:var(--gold); stroke-opacity:1; stroke-width:1.75; }
+  .has-focus li:not(.hot) { opacity:.38; }
+  .is-touring path, .is-touring li { transition-duration:.45s; }
+
+  /* entrance; labels animate their inner content so the hover dimming on li keeps working */
+  .is-armed .map-areas li > span, .is-armed .map-works a { opacity:0; }
+  .is-shown .map-areas li > span, .is-shown .map-works a { animation:label-in .5s cubic-bezier(.2,.7,.2,1) var(--delay) both; }
+  @keyframes label-in { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:none; } }
+  /* each link is uncovered left to right (every curve runs left to right, so this traces it);
+     a dash-offset draw breaks here because the SVG is stretched to fit */
+  .is-armed path { clip-path:inset(-4px 100% -4px -4px); }
+  .is-shown path { animation:link-draw var(--draw) cubic-bezier(.45,0,.25,1) var(--delay) forwards; }
+  @keyframes link-draw { to { clip-path:inset(-4px -4px -4px -4px); } }
+
+  .map-caption { margin:18px 0 0; font:400 13px/1.5 var(--sans); color:var(--ink-2); }
+  @media (hover:none) { .hint { display:none; } }
+  @media (max-width:560px) {
+    .map { grid-template-columns:auto minmax(64px,1fr) minmax(0,1.9fr); height:320px; }
+    .full { display:none; }
+    .short { display:inline-block; }
+    .map-areas li { padding-right:9px; font-size:13px; }
+    .map-works li { padding-left:9px; }
+    .t { font-size:13.5px; }
+    .m { font-size:11px; }
+  }
+</style>

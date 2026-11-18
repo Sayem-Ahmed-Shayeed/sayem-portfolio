@@ -8,7 +8,7 @@ contributors:
 publisher: "Mendeley Data"
 version: "Version 1"
 doi: "10.17632/7nmvdyr2g4.1"
-image: "/images/research/camellia-of-sylhet-mendeley.png"
+image: "../../assets/research/camellia-of-sylhet-mendeley.png"
 alt: "CamelliaOfSylhet dataset record on Mendeley Data"
 tags: ["Computer Vision", "Tea", "Deep Learning", "Transfer Learning", "Self-Supervised Learning", "Agriculture", "1,637 images"]
 links:

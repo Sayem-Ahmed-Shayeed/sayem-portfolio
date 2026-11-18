@@ -5,7 +5,7 @@ featured: true
 status: "MVP"
 role: "Creator / Developer"
 team: "Solo"
-image: "https://raw.githubusercontent.com/Sayem-Ahmed-Shayeed/SoundFlow/main/screenshots/01-dictation-idle.png"
+image: "../../assets/projects/soundflow.png"
 alt: "SoundFlow desktop dictation interface"
 description: "A privacy-first desktop dictation app for Linux and Windows that transcribes speech locally with faster-whisper, then optionally polishes transcripts with Gemini or OpenRouter."
 technologies: ["Python", "faster-whisper", "Qt", "Gemini", "OpenRouter", "PyInstaller"]
